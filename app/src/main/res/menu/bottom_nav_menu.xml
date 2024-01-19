@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/realtimedeals"
+        android:title="RealTime Deals"
+        android:icon="@drawable/ic_realtimedeal"/>
+    <item
+        android:id="@+id/hourdeals"
+        android:title="Hour Deals"
+        android:icon="@drawable/ic_hoursdeal"/>
+
+    <item
+        android:id="@+id/hotdeals"
+        android:title="Hot Deals"
+        android:icon="@drawable/ic_hotsdeals"/>
+
+</menu>
