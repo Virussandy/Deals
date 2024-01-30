@@ -17,6 +17,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.squareup.picasso.Picasso;
 import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHolder> {
 
@@ -51,12 +54,54 @@ public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHol
         holder.shopNow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(list.get(holder.getAdapterPosition()).getShopUrl()));
-                browserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(browserIntent);
-//                Toast.makeText(context, ""+list.get(holder.getAdapterPosition()).getShopUrl(), Toast.LENGTH_SHORT).show();
+                redirect(holder);
             }
         });
+    }
+
+    private void redirect(HourDealsHolder holder) {
+        String url = list.get(holder.getAdapterPosition()).getShopUrl();
+        String pattern = "redirectpid1=([^&]+)&store=([^&]+)";
+        Pattern r = Pattern.compile(pattern);
+        Matcher m = r.matcher(url);
+
+        if (m.find()) {
+            String productId = m.group(1);
+            String store = m.group(2);
+
+            if (store != null) {
+                String storeUrl = null;
+
+                switch (store) {
+                    case "amazon":
+                        storeUrl = "https://www.amazon.in/dp/" + productId;
+                        break;
+                    case "myntra":
+                        storeUrl = "https://www.myntra.com/" + productId;
+                        break;
+                    case "flipkart":
+                        storeUrl = "https://www.flipkart.com/a/p/b?pid=" + productId;
+                        break;
+                    case "ajio":
+                        storeUrl = "https://www.ajio.com/p/" + productId;
+                        break;
+                }
+
+                if (storeUrl != null) {
+                    goToUrl(storeUrl);
+                    return;
+                }
+            }
+        }
+
+        goToUrl(url);
+    }
+
+    private void goToUrl(String url)
+    {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        browserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(browserIntent);
     }
 
     @Override

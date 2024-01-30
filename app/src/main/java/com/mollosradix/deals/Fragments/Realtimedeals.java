@@ -2,6 +2,7 @@ package com.mollosradix.deals.Fragments;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.core.content.ContextCompat;
@@ -128,7 +129,7 @@ public class Realtimedeals extends Fragment {
                     Elements timeInfo = element.getElementsByClass("timeinfo");
                     for (Element time:timeInfo) {
                         productTimeInfo = time.text();
-                        if(productTimeInfo.isEmpty()){
+                        if (productTimeInfo.isEmpty()) {
                             productTimeInfo = "Updated recently";
                         }
                         //Log.d(TAG, "Time: "+time.text());

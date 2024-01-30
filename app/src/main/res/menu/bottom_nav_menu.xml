@@ -9,9 +9,9 @@
         android:title="Hour Deals"
         android:icon="@drawable/ic_hoursdeal"/>
 
-    <item
-        android:id="@+id/hotdeals"
-        android:title="Hot Deals"
-        android:icon="@drawable/ic_hotsdeals"/>
+<!--    <item-->
+<!--        android:id="@+id/hotdeals"-->
+<!--        android:title="Hot Deals"-->
+<!--        android:icon="@drawable/ic_hotsdeals"/>-->
 
 </menu>

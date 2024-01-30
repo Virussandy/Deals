@@ -39,8 +39,8 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 return true;
             case R.id.realtimedeals: getSupportFragmentManager().beginTransaction().replace(R.id.flFragment,realtimedeals).commit();
                 return true;
-            case R.id.hotdeals: getSupportFragmentManager().beginTransaction().replace(R.id.flFragment,hotDeals).commit();
-                return true;
+//            case R.id.hotdeals: getSupportFragmentManager().beginTransaction().replace(R.id.flFragment,hotDeals).commit();
+//                return true;
         }
         return false;
     }
