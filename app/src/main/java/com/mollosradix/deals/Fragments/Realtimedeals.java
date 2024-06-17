@@ -19,11 +19,13 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.mollosradix.deals.CheckInternet;
+import com.mollosradix.deals.BaseActivity;
 import com.mollosradix.deals.DealsAdapter;
 import com.mollosradix.deals.DealsModel;
 import com.mollosradix.deals.R;
+import com.mollosradix.deals.URLFilter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -34,7 +36,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Realtimedeals extends Fragment {
+public class Realtimedeals extends BaseActivity {
 
     private ProgressBar progressBar;
     private View view;
@@ -43,6 +45,8 @@ public class Realtimedeals extends Fragment {
     private String productImgLink,productDiscription,productTimeInfo,productCPrice,productSPrice,productShopLogo,productMainLink,productOff;
     private List<DealsModel> realTimeDealData ;
     private int start = 0;
+    private boolean isLoadingMore = false;
+    URLFilter urlFilter = new URLFilter();
 
     public Realtimedeals() {
         // Required empty public constructor
@@ -53,6 +57,32 @@ public class Realtimedeals extends Fragment {
         super.onCreate(savedInstanceState);
 
     }
+    private void checkAndLoadData() {
+        if (isConnectedToInternet()) {
+            new RealTimeDealsNetwork().execute();
+        } else {
+            showNoConnectionSnackbar();
+        }
+    }
+
+    private void showNoConnectionSnackbar() {
+        Snackbar snackbar = Snackbar.make(requireActivity().findViewById(android.R.id.content),
+                "No internet connection.",
+                Snackbar.LENGTH_INDEFINITE);
+        snackbar.setActionTextColor(ContextCompat.getColor(requireContext(), R.color.day_background));
+        snackbar.setAction("Retry", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkAndLoadData();
+            }
+        }).show();
+    }
+
+    @Override
+    protected void onNetworkReconnect() {
+        new RealTimeDealsNetwork().execute();
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -62,7 +92,7 @@ public class Realtimedeals extends Fragment {
         progressBar = view.findViewById(R.id.progressbar);
 //        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(),2));
-        check(getContext());
+        checkAndLoadData();
         return view;
     }
 
@@ -71,37 +101,15 @@ public class Realtimedeals extends Fragment {
         super.onStart();
     }
 
-    public void check(Context context)
-    {
-        CheckInternet checkInternet = new CheckInternet(context);
-        if(checkInternet.internet_connection())
-        {
-            new RealTimeDealsNetwork().execute();
-        }else {
-            final Snackbar snackbar = Snackbar.make(getActivity().findViewById(android.R.id.content),
-                    "No internet connection.",
-                    Snackbar.LENGTH_INDEFINITE);
-            snackbar.setActionTextColor(ContextCompat.getColor(context,
-                    R.color.day_background));
-            snackbar.setAction("Reconnect", new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(checkInternet.internet_connection())
-                    {
-                        new RealTimeDealsNetwork().execute();
-                    }else {
-                        check(context);
-                    }
-                }
-            }).show();
-        }
-    }
     public class RealTimeDealsNetwork extends AsyncTask<String, Integer, List<DealsModel>> {
 
         private static final String TAG = "";
 
         @Override
         protected List<DealsModel> doInBackground(String... strings) {
+            if (!isConnectedToInternet()) {
+                return null;
+            }
             Document doc;
             Connection connection;
             connection = Jsoup.connect("https://indiadesire.com/lootdeals");
@@ -146,7 +154,8 @@ public class Realtimedeals extends Fragment {
                     }
                     Elements shopLogo = element.getElementsByClass("imgleft");
                     for (Element logo:shopLogo) {
-                        productShopLogo = logo.attr("src");
+                        //productShopLogo = logo.attr("title").substring(0,1).toUpperCase()+logo.attr("title").substring(1);
+                        productShopLogo = StringUtils.capitalize(logo.attr("title"));
                         //Log.d(TAG, "Shop Logo: "+logo.attr("src"));
                     }
                     Elements productUrl = element.getElementsByClass("myButton");
@@ -162,7 +171,7 @@ public class Realtimedeals extends Fragment {
                     hourDealsModel.setNewPrice(productCPrice);
                     hourDealsModel.setOldPrice(productSPrice);
                     hourDealsModel.setStoreLogoUrl(productShopLogo);
-                    hourDealsModel.setShopUrl(productMainLink);
+                    hourDealsModel.setShopUrl(urlFilter.getOriginalURL(productMainLink));
                     hourDealsModel.setOff(productOff);
                     realTimeDealData.add(hourDealsModel);
                 }

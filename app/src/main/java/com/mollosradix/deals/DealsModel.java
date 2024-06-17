@@ -5,23 +5,24 @@ public class DealsModel {
     private String productName;
     private String newPrice;
     private String oldPrice;
-    private String UpdateTime;
+    private String updateTime;
     private String storeLogoUrl;
     private String shopUrl;
     private String off;
+
+
+    public DealsModel() {
+    }
 
     public DealsModel(String imageUrl, String productName, String newPrice, String oldPrice, String updateTime, String storeLogoUrl, String shopUrl, String off) {
         this.imageUrl = imageUrl;
         this.productName = productName;
         this.newPrice = newPrice;
         this.oldPrice = oldPrice;
-        UpdateTime = updateTime;
+        this.updateTime = updateTime;
         this.storeLogoUrl = storeLogoUrl;
         this.shopUrl = shopUrl;
         this.off = off;
-    }
-
-    public DealsModel() {
     }
 
     public String getImageUrl() {
@@ -57,11 +58,11 @@ public class DealsModel {
     }
 
     public String getUpdateTime() {
-        return UpdateTime;
+        return updateTime;
     }
 
     public void setUpdateTime(String updateTime) {
-        UpdateTime = updateTime;
+        this.updateTime = updateTime;
     }
 
     public String getStoreLogoUrl() {

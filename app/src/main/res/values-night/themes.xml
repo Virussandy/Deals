@@ -1,19 +1,6 @@
 <resources>
     <style name="AppTheme" parent="Theme.Material3.DynamicColors.Dark">
-        <!-- Colors -->
-        <item name="colorPrimary">@color/night_primary</item>
-        <item name="colorPrimaryVariant">@color/night_primary_variant</item>
-        <item name="colorOnPrimary">@color/night_on_primary</item>
-        <item name="colorSecondary">@color/night_secondary</item>
-        <item name="colorSecondaryVariant">@color/night_secondary_variant</item>
-        <item name="colorOnSecondary">@color/night_on_secondary</item>
-        <item name="colorSurface">@color/night_colorSurface</item>
 
-        <!-- Text -->
-        <item name="android:textColor">@color/night_text</item>
-
-        <!-- Background -->
-        <item name="android:windowBackground">@color/night_background</item>
     </style>
 
 </resources>

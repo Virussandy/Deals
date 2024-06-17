@@ -1,21 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.Material3.DynamicColors.Light">
-        <!-- Colors -->
-        <item name="colorPrimary">@color/day_primary</item>
-        <item name="colorPrimaryVariant">@color/day_primary_variant</item>
-        <item name="colorOnPrimary">@color/day_on_primary</item>
-        <item name="colorSecondary">@color/day_secondary</item>
-        <item name="colorSecondaryVariant">@color/day_secondary_variant</item>
-        <item name="colorOnSecondary">@color/day_on_secondary</item>
-        <item name="colorSurface">@color/day_colorSurface</item>
-
-
-        <!-- Text -->
-        <item name="android:textColor">@color/day_text</item>
-
-        <!-- Background -->
-        <item name="android:windowBackground">@color/day_background</item>
     </style>
 
 </resources>

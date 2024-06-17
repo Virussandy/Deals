@@ -17,11 +17,13 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.mollosradix.deals.CheckInternet;
+import com.mollosradix.deals.BaseActivity;
 import com.mollosradix.deals.DealsAdapter;
 import com.mollosradix.deals.DealsModel;
 import com.mollosradix.deals.R;
+import com.mollosradix.deals.URLFilter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -32,7 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HourDeals extends Fragment {
+public class HourDeals extends BaseActivity {
 
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
@@ -41,6 +43,7 @@ public class HourDeals extends Fragment {
     private Element content,EproductImgLink,EproductDiscription,EproductTimeInfo,EproductCPrice,EproductSPrice,EproductShopLogo,EproductMainLink;
     private Elements imageLink,discription,timeInfo,cpricedata,spricedata,shoplogo,links;
     private List hourDealData ;
+    URLFilter urlFilter = new URLFilter();
 
 
     public HourDeals() {
@@ -57,6 +60,33 @@ public class HourDeals extends Fragment {
         super.onResume();
     }
 
+    private void checkAndLoadData() {
+        if (isConnectedToInternet()) {
+            new HourDealsNetwork().execute();
+        } else {
+            showNoConnectionSnackbar();
+        }
+    }
+
+    private void showNoConnectionSnackbar() {
+        Snackbar snackbar = Snackbar.make(requireActivity().findViewById(android.R.id.content),
+                "No internet connection.",
+                Snackbar.LENGTH_INDEFINITE);
+        snackbar.setActionTextColor(ContextCompat.getColor(requireContext(), R.color.day_background));
+        snackbar.setAction("Retry", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkAndLoadData();
+            }
+        }).show();
+    }
+
+    @Override
+    protected void onNetworkReconnect() {
+        new HourDealsNetwork().execute();
+    }
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -64,7 +94,7 @@ public class HourDeals extends Fragment {
         progressBar = view.findViewById(R.id.progressbar);
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(),2));
-        check(getContext());
+        checkAndLoadData();
         return view;
     }
 
@@ -74,31 +104,6 @@ public class HourDeals extends Fragment {
         super.onStart();
     }
 
-    public void check(Context context)
-    {
-        CheckInternet checkInternet = new CheckInternet(context);
-        if(checkInternet.internet_connection())
-        {
-            new HourDealsNetwork().execute();
-        }else {
-            final Snackbar snackbar = Snackbar.make(getActivity().findViewById(android.R.id.content),
-                    "No internet connection.",
-                    Snackbar.LENGTH_INDEFINITE);
-            snackbar.setActionTextColor(ContextCompat.getColor(context,
-                    R.color.day_background));
-            snackbar.setAction("Reconnect", new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(checkInternet.internet_connection())
-                    {
-                        new HourDealsNetwork().execute();
-                    }else {
-                        check(context);
-                    }
-                }
-            }).show();
-        }
-    }
     public void setList() {
         if (!hourDealData.isEmpty()&&hourDealData!=null) {
             //progressDialog.dismiss();
@@ -119,6 +124,10 @@ public class HourDeals extends Fragment {
 
         @Override
         protected List<DealsModel> doInBackground(String... strings) {
+
+            if (!isConnectedToInternet()) {
+                return null;
+            }
             Document doc;
             Connection connection;
             connection = Jsoup.connect("https://indiadesire.com/lootdeals");
@@ -132,7 +141,7 @@ public class HourDeals extends Fragment {
                 timeInfo = content.getElementsByClass("timeinfo");
                 cpricedata = content.getElementsByClass("cprice");
                 spricedata = content.getElementsByClass("oprice");
-                shoplogo = content.getElementsByClass("imgleft");
+                shoplogo = content.getElementsByClass("divcenter1");
                 links = content.getElementsByClass("myButton");
                 hourDealData = new ArrayList<DealsModel>();
                 for (int i = 0; i < imageLink.size(); i++) {
@@ -152,7 +161,8 @@ public class HourDeals extends Fragment {
                     productSPrice = EproductSPrice.text();
 
                     EproductShopLogo = shoplogo.get(i);
-                    productShopLogo = EproductShopLogo.attr("src");
+                    //productShopLogo = EproductShopLogo.attr("store").substring(0,1).toUpperCase()+EproductShopLogo.attr("store").substring(1);
+                    productShopLogo = StringUtils.capitalize(EproductShopLogo.attr("store"));
 
                     EproductMainLink = links.get(i);
                     productMainLink = EproductMainLink.attr("href");
@@ -167,7 +177,7 @@ public class HourDeals extends Fragment {
                     hourDealsModel.setNewPrice(productCPrice);
                     hourDealsModel.setOldPrice(productSPrice);
                     hourDealsModel.setStoreLogoUrl(productShopLogo);
-                    hourDealsModel.setShopUrl(productMainLink);
+                    hourDealsModel.setShopUrl(urlFilter.getOriginalURL(productMainLink));
                     hourDealsModel.setOff(productOff);
                     hourDealData.add(hourDealsModel);
 //                Log.d(TAG, "doInBackground: "+productMainLink);

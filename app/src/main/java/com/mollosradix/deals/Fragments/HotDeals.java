@@ -2,39 +2,244 @@ package com.mollosradix.deals.Fragments;
 
 import static android.content.ContentValues.TAG;
 
-import static it.skrape.core.ParserKt.htmlDocument;
-
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.text.Html;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.gargoylesoftware.htmlunit.javascript.host.fetch.Response;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+import com.google.android.material.snackbar.Snackbar;
+import com.mollosradix.deals.BaseActivity;
+import com.mollosradix.deals.DealsAdapter;
+import com.mollosradix.deals.DealsModel;
 import com.mollosradix.deals.R;
 
-import it.skrape.fetcher.BrowserFetcherKt;
-import it.skrape.fetcher.Request;
-import it.skrape.fetcher.Result;
-import it.skrape.fetcher.BrowserFetcher;
-import it.skrape.fetcher.HttpFetcher;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
-public class HotDeals extends Fragment {
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+
+public class HotDeals extends BaseActivity {
+
+    private ProgressBar progressBar;
+    private RecyclerView recyclerView;
+    private DealsAdapter adapter;
+    private List<DealsModel> hotDealData = new ArrayList<>();
+    private String actualPrice , dealUrl;
+    private int currentPage = 1; // Track current page
+    private static final String TRACKING_ID = "deals026f-21";
+
+    public HotDeals() {
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_hot_deals, container, false);
+        View view = inflater.inflate(R.layout.fragment_hot_deals, container, false);
+        progressBar = view.findViewById(R.id.progressbar);
+        recyclerView = view.findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        adapter = new DealsAdapter(hotDealData, getActivity());
+        recyclerView.setAdapter(adapter);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (!recyclerView.canScrollVertically(1)) {
+                    // Load next page when reached to the end
+                    currentPage++;
+                    checkAndLoadData();
+                }
+            }
+        });
+        checkAndLoadData();
+        return view;
+    }
+
+
+    private void checkAndLoadData() {
+        if (isConnectedToInternet()) {
+            new HotDealsNetwork().execute();
+        } else {
+            showNoConnectionSnackbar();
+        }
+    }
+
+    private void showNoConnectionSnackbar() {
+        Snackbar snackbar = Snackbar.make(requireActivity().findViewById(android.R.id.content),
+                "No internet connection.",
+                Snackbar.LENGTH_INDEFINITE);
+        snackbar.setActionTextColor(ContextCompat.getColor(requireContext(), R.color.day_background));
+        snackbar.setAction("Retry", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkAndLoadData();
+            }
+        }).show();
+    }
+
+    @Override
+    protected void onNetworkReconnect() {
+        new HotDealsNetwork().execute();
+    }
+
+
+    public class HotDealsNetwork extends AsyncTask<Void, Integer, List<DealsModel>> {
+
+        @Override
+        protected List<DealsModel> doInBackground(Void... voids) {
+            if (!isConnectedToInternet()) {
+                return null;
+            }
+            List<DealsModel> data = new ArrayList<>();
+            try {
+                Document doc = Jsoup.connect("https://www.desidime.com/new?page=" + currentPage).get();
+                Elements elements = doc.select(".gridfix .l-deal-box");
+                for (Element deal : elements) {
+                    String imageUrl = deal.select(".l-deal-box-image img").attr("data-src");
+                    String title = deal.select(".l-deal-dsp a").text();
+                    String price = deal.select(".l-deal-price").text();
+                    String discount = deal.select(".l-deal-discount").text();
+                    String store = deal.select(".l-deal-store").text();
+//                    String actualPrice = deal.select(".l-promouser").text();
+                    String time = deal.select(".l-promotime").text();
+                    String extractedURL = extractURL(deal.select(".btn-lgetdeal").attr("data-href"));
+                    if (!extractedURL.isEmpty()) {
+                        if (extractedURL.contains("amazon.in")) {
+                            dealUrl = appendTrackingId(extractedURL, TRACKING_ID);
+                        }else {
+                            dealUrl = extractedURL;
+                        }
+                    }
+
+                    if (TextUtils.isEmpty(title)) {
+                        title = "Title not available";
+                    }
+                    if(!TextUtils.isEmpty(price)&&!TextUtils.isEmpty(discount)){
+                        actualPrice = calculateActualPrice(discount,price);
+                    }
+                    if (TextUtils.isEmpty(price)) {
+                        price = "Price not available";
+                        actualPrice = null;
+                    }
+                    if (TextUtils.isEmpty(discount)) {
+                        discount = "Discount not available";
+                    }
+                    if (TextUtils.isEmpty(store)) {
+                        store = "Store not available";
+                    }
+                    if (TextUtils.isEmpty(time)) {
+                        time = "Time not available";
+                    }
+                    if (TextUtils.isEmpty(imageUrl)) {
+                        imageUrl = "Image not available";
+                    }
+                    if (TextUtils.isEmpty(dealUrl)) {
+                        dealUrl = "Deal URL not available";
+                    }
+
+                    //Log.d(TAG, "doInBackground: \n" + title + "\n" + price + "\n" + discount + "\n" + store + "\n" + user + "\n" + time + "\n" + imageUrl + "\n" + dealUrl + "\n\n\n\n");
+                    DealsModel dealdata = new DealsModel(imageUrl, title, price, actualPrice, time, store, dealUrl, discount);
+                    data.add(dealdata);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return data;
+        }
+
+        private String calculateActualPrice(String discount, String price) {
+            int length = discount.length(),aprice,cal=0;
+            float f;
+            if(length == 6){
+                aprice = Integer.parseInt(discount.substring(0,1));
+                f = (float) aprice /100;
+                cal = (int) (Float.parseFloat(price)/(1-f));
+            }else if(length == 7){
+                aprice = Integer.parseInt(discount.substring(0,2));
+                f = (float) aprice /100;
+                cal = (int) (Float.parseFloat(price)/(1-f));
+            }else if(length == 8){
+                aprice = Integer.parseInt(discount.substring(0,3));
+                f = (float) aprice /100;
+                cal = (int) (Float.parseFloat(price)/(1-f));
+            }
+            return String.valueOf(cal);
+        }
+
+        private String extractURL(String input) {
+            try {
+                // Regular expression pattern to match the URL part after 'url='
+                String regex = "url=(.*)";
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(input);
+
+                // Extract and return the URL
+                if (matcher.find()) {
+                    String encodedURL = matcher.group(1);
+                    return URLDecoder.decode(encodedURL, StandardCharsets.UTF_8.toString());
+                } else {
+                    return input; // Return null if no match is found
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+            private String appendTrackingId(String url, String trackingId) {
+                if (url.contains("?")) {
+                    return url + "&tag=" + trackingId;
+                } else {
+                    return url + "?tag=" + trackingId;
+                }
+            }
+
+        @Override
+        protected void onPostExecute(List<DealsModel> newDeals) {
+            super.onPostExecute(newDeals);
+            progressBar.setVisibility(View.GONE);
+            if (newDeals.isEmpty()) {
+                Toast.makeText(getContext(), "No more data available", Toast.LENGTH_SHORT).show();
+            } else {
+                hotDealData.addAll(newDeals);
+                adapter.notifyDataSetChanged();
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+        @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        hotDealData.clear();
+        currentPage = 1;
+        super.onCreate(savedInstanceState);
     }
 }
