@@ -17,8 +17,8 @@ android {
     defaultConfig {
         applicationId "com.mollosradix.deals"
         minSdk 28
-        targetSdk 33
-        versionCode 1
+        targetSdk 34
+        versionCode 3
         versionName "1.0"
 
         multiDexEnabled true
@@ -36,6 +36,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    buildToolsVersion '34.0.0'
 }
 
 dependencies {

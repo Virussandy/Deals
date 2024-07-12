@@ -161,7 +161,7 @@ public class Realtimedeals extends BaseActivity {
                     Elements productUrl = element.getElementsByClass("myButton");
                     for (Element link:productUrl) {
                         productMainLink = link.attr("href");
-                        Log.d(TAG, "Product Link: "+link.attr("href"));
+//                        Log.d(TAG, "Product Link: "+link.attr("href"));
                     }
                     productOff = 100 * (Integer.parseInt(productSPrice.replaceAll("[^0-9]", "")) - Integer.parseInt(productCPrice.replaceAll("[^0-9]", ""))) / Integer.parseInt(productSPrice.replaceAll("[^0-9]", "")) +"% OFF";
                     DealsModel hourDealsModel = new DealsModel();

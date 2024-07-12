@@ -10,7 +10,6 @@ public class DealsModel {
     private String shopUrl;
     private String off;
 
-
     public DealsModel() {
     }
 

@@ -1,11 +1,14 @@
 package com.mollosradix.deals;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.SearchView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.color.DynamicColors;
@@ -13,9 +16,13 @@ import com.mollosradix.deals.Fragments.HotDeals;
 import com.mollosradix.deals.Fragments.HourDeals;
 import com.mollosradix.deals.Fragments.Realtimedeals;
 
-public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener{
+public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
 
     private BottomNavigationView bottomNavigationView;
+    private SearchView searchView;
+    private HourDeals hourDeals;
+    private Realtimedeals realtimedeals;
+    private HotDeals hotDeals;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,23 +33,58 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         setContentView(R.layout.activity_main);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
-        bottomNavigationView.setSelectedItemId(R.id.realtimedeals);
+        bottomNavigationView.setSelectedItemId(R.id.hotdeals);
+
+        hourDeals = new HourDeals();
+        realtimedeals = new Realtimedeals();
+        hotDeals = HotDeals.newInstance(null); // Initialize HotDeals fragment
     }
-    HourDeals hourDeals = new HourDeals();
-    Realtimedeals realtimedeals = new Realtimedeals();
-    HotDeals hotDeals = new HotDeals();
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.hourdeals: getSupportFragmentManager().beginTransaction().replace(R.id.flFragment,hourDeals).commit();
+        switch (item.getItemId()) {
+            case R.id.hourdeals:
+                getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, hourDeals).commit();
+                collapseSearchView();
                 return true;
-            case R.id.realtimedeals: getSupportFragmentManager().beginTransaction().replace(R.id.flFragment,realtimedeals).commit();
+            case R.id.realtimedeals:
+                getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, realtimedeals).commit();
+                collapseSearchView();
                 return true;
-            case R.id.hotdeals: getSupportFragmentManager().beginTransaction().replace(R.id.flFragment,hotDeals).commit();
+            case R.id.hotdeals:
+                getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, hotDeals).commit();
+                collapseSearchView();
                 return true;
         }
         return false;
     }
 
+    private void collapseSearchView() {
+        if (searchView != null) {
+            searchView.setQuery("", false);
+            searchView.setIconified(true);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        MenuItem searchViewItem = menu.findItem(R.id.action_search);
+        searchView = (SearchView) searchViewItem.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                HotDeals hotDealsFragment = HotDeals.newInstance(query);
+                getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, hotDealsFragment).commit();
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+        return super.onCreateOptionsMenu(menu);
+    }
 }

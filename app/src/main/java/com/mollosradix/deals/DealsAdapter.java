@@ -20,15 +20,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
 import com.squareup.picasso.Picasso;
+
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHolder> {
 
-    List<DealsModel> list;
-    Context context;
-    URLFilter urlFilter = new URLFilter();
+    private final List<DealsModel> list;
+    private final Context context;
 
     public DealsAdapter(List<DealsModel> data, FragmentActivity application) {
         this.list = data;
@@ -38,59 +36,48 @@ public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHol
     @NonNull
     @Override
     public HourDealsHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View viewitem = inflater.inflate(R.layout.row,parent,false);
-        HourDealsHolder holder = new HourDealsHolder(viewitem);
-        return holder;
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row, parent, false);
+        return new HourDealsHolder(view);
     }
-
 
     @Override
     public void onBindViewHolder(@NonNull HourDealsHolder holder, int position) {
-        if (list != null && !list.isEmpty() && holder.getAdapterPosition() < list.size()) {
-            Picasso.get().load(list.get(holder.getAdapterPosition()).getImageUrl().isEmpty()?"https://cdn.pixabay.com/photo/2016/03/21/20/05/image-1271454_640.png":list.get(position).getImageUrl()).into(holder.imageView);
-            //Picasso.get().load(list.get(holder.getAdapterPosition()).getStoreLogoUrl()).into(holder.shopLogo);
-            holder.shopLogo.setText(list.get(holder.getAdapterPosition()).getStoreLogoUrl());
-            holder.name.setText(list.get(holder.getAdapterPosition()).getProductName());
-            holder.off.setText(list.get(holder.getAdapterPosition()).getOff());
-            holder.sellprice.setText(list.get(holder.getAdapterPosition()).getNewPrice());
-            holder.costprice.setText(list.get(holder.getAdapterPosition()).getOldPrice());
-            holder.updateinfo.setText(list.get(holder.getAdapterPosition()).getUpdateTime());
+        if (list != null && !list.isEmpty() && position < list.size()) {
+            DealsModel deal = list.get(position);
 
-            Log.d(TAG, "onBindViewHolder: "+list.get(holder.getAdapterPosition()).getShopUrl());
-            holder.shopNow.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-//                    goToUrl(urlFilter.getOriginalURL(list.get(holder.getAdapterPosition()).getShopUrl()));
-                    goToUrl(list.get(holder.getAdapterPosition()).getShopUrl());
-                }
-            });
-            holder.share.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-//                    shareItem(urlFilter.getOriginalURL(list.get(holder.getAdapterPosition()).getShopUrl()));
-                    shareItem(list.get(holder.getAdapterPosition()).getShopUrl());
-                }
-            });
+            Picasso.get().load(deal.getImageUrl().isEmpty() ? "https://cdn.pixabay.com/photo/2016/03/21/20/05/image-1271454_640.png" : deal.getImageUrl()).into(holder.imageView);
+            holder.shopLogo.setText(deal.getStoreLogoUrl());
+            holder.name.setText(deal.getProductName());
+            holder.off.setText(deal.getOff());
+            holder.sellprice.setText(deal.getNewPrice());
+            holder.costprice.setText(deal.getOldPrice());
+            holder.updateinfo.setText(deal.getUpdateTime());
+            holder.costprice.setPaintFlags(holder.costprice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+
+            holder.shopNow.setOnClickListener(view -> goToUrl(deal.getShopUrl()));
+            holder.share.setOnClickListener(v -> shareItem(deal.getShopUrl()));
         }
     }
 
     private void shareItem(String url) {
-        Log.d(TAG, "shareItem: "+url);
-        if (url != null) {
+        if (url != null && !url.isEmpty()) {
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
             shareIntent.putExtra(Intent.EXTRA_TEXT, url);
             context.startActivity(Intent.createChooser(shareIntent, "Share via"));
+        } else {
+            Log.e(TAG, "Invalid URL");
         }
     }
 
-    private void goToUrl(String url)
-    {
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        browserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(browserIntent);
+    private void goToUrl(String url) {
+        if (url != null && !url.isEmpty()) {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            browserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(browserIntent);
+        } else {
+            Log.e(TAG, "Invalid URL");
+        }
     }
 
     @Override
@@ -98,23 +85,23 @@ public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHol
         return list.size();
     }
 
-    public static class HourDealsHolder extends RecyclerView.ViewHolder{
+    public static class HourDealsHolder extends RecyclerView.ViewHolder {
         public ImageView imageView;
-        public TextView off,name,sellprice, costprice, updateinfo,shopLogo;
+        public TextView off, name, sellprice, costprice, updateinfo, shopLogo;
         public Button shopNow;
         public MaterialCardView share;
+
         public HourDealsHolder(@NonNull View itemView) {
             super(itemView);
-            this.imageView = itemView.findViewById(R.id.productImage);
-            this.shopLogo = itemView.findViewById(R.id.shopImage);
-            this.off = itemView.findViewById(R.id.off);
-            this.name = itemView.findViewById(R.id.name);
-            this.sellprice = itemView.findViewById(R.id.sellPrice);
-            this.costprice = itemView.findViewById(R.id.costPrice);
-            costprice.setPaintFlags(costprice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-            this.updateinfo = itemView.findViewById(R.id.updateTime);
-            this.shopNow = itemView.findViewById(R.id.button);
-            this.share = itemView.findViewById(R.id.share);
+            imageView = itemView.findViewById(R.id.productImage);
+            shopLogo = itemView.findViewById(R.id.shopImage);
+            off = itemView.findViewById(R.id.off);
+            name = itemView.findViewById(R.id.name);
+            sellprice = itemView.findViewById(R.id.sellPrice);
+            costprice = itemView.findViewById(R.id.costPrice);
+            updateinfo = itemView.findViewById(R.id.updateTime);
+            shopNow = itemView.findViewById(R.id.button);
+            share = itemView.findViewById(R.id.share);
         }
     }
 }
