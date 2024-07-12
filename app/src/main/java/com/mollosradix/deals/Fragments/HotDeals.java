@@ -59,10 +59,10 @@ public class HotDeals extends BaseActivity {
         // Required empty public constructor
     }
 
-    public static HotDeals newInstance(String message) {
+    public static HotDeals newInstance(String query) {
         HotDeals fragment = new HotDeals();
         Bundle args = new Bundle();
-        args.putString(ARG_MESSAGE, message);
+        args.putString("query", query);
         fragment.setArguments(args);
         return fragment;
     }

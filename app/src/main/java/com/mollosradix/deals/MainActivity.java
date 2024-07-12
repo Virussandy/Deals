@@ -31,10 +31,17 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             DynamicColors.applyToActivitiesIfAvailable(getApplication());
         }
         setContentView(R.layout.activity_main);
+
+        // Initialize fragments here
+        hourDeals = new HourDeals();
+        realtimedeals = new Realtimedeals();
+        hotDeals = HotDeals.newInstance(null);
+
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
         bottomNavigationView.setSelectedItemId(R.id.hotdeals);
 
+        // Initialize fragments
         hourDeals = new HourDeals();
         realtimedeals = new Realtimedeals();
         hotDeals = HotDeals.newInstance(null); // Initialize HotDeals fragment
@@ -44,20 +51,27 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.hourdeals:
-                getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, hourDeals).commit();
+                if (hourDeals != null) {
+                    getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, hourDeals).commit();
+                }
                 collapseSearchView();
                 return true;
             case R.id.realtimedeals:
-                getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, realtimedeals).commit();
+                if (realtimedeals != null) {
+                    getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, realtimedeals).commit();
+                }
                 collapseSearchView();
                 return true;
             case R.id.hotdeals:
-                getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, hotDeals).commit();
+                if (hotDeals != null) {
+                    getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, hotDeals).commit();
+                }
                 collapseSearchView();
                 return true;
         }
         return false;
     }
+
 
     private void collapseSearchView() {
         if (searchView != null) {
