@@ -10,43 +10,34 @@ public class URLFilter {
     private static final String TRACKING_ID = "deals026f-21";
 
     public String getOriginalURL(String redirectUrl) {
-        System.out.println("getOriginalURL: " + redirectUrl);
-
-        // Try to match the primary pattern first
         Pattern primaryPattern = Pattern.compile("redirectpid1=([^&]+)&store=([^&]+)");
         Matcher primaryMatcher = primaryPattern.matcher(redirectUrl);
         if (primaryMatcher.find()) {
             String productId = primaryMatcher.group(1);
             String store = primaryMatcher.group(2);
-            System.out.println("Primary Match: productId = " + productId + ", store = " + store);
             return buildIndiadesireUrl(store, productId);
         }
 
-        // Handle nested redirects
         Pattern nestedPattern = Pattern.compile("redirect=([^&]+)");
         Matcher nestedMatcher = nestedPattern.matcher(redirectUrl);
         if (nestedMatcher.find()) {
             String nestedRedirect = nestedMatcher.group(1);
             try {
                 String decodedRedirect = URLDecoder.decode(nestedRedirect, StandardCharsets.UTF_8.name());
-                System.out.println("Decoded redirect: " + decodedRedirect);
+                decodedRedirect = decodedRedirect.replaceAll("\\s", ""); // Remove all whitespace
 
-                // Now match productId and store from the decoded redirect URL
                 Pattern productIdPattern = Pattern.compile("redirectpid1=([^&]+)");
                 Matcher productIdMatcher = productIdPattern.matcher(decodedRedirect);
                 if (productIdMatcher.find()) {
                     String productId = productIdMatcher.group(1);
-                    System.out.println("Found productId: " + productId);
-
-                    // Extract store from the decoded redirect URL
                     String store = getStoreFromUrl(decodedRedirect);
-                    System.out.println("Store: " + store);
-
-                    // Build final URL
                     return buildIndiadesireUrl(store, productId);
                 } else {
-                    System.out.println("No productId found in nested redirect");
-                    return "Invalid URL";
+                    if (decodedRedirect.contains("amazon.in")) {
+                        decodedRedirect = appendAmazonTag(decodedRedirect, TRACKING_ID);
+                    }
+                    System.out.println("Decoded redirect: " + decodedRedirect);
+                    return decodedRedirect;
                 }
             } catch (UnsupportedEncodingException e) {
                 System.err.println("Error decoding URL");
@@ -56,9 +47,25 @@ public class URLFilter {
         }
 
         System.out.println("No match found");
-        return "Invalid URL";
+        return redirectUrl;
     }
 
+    private String appendAmazonTag(String url, String tag) {
+        if (url.contains("?tag=")) {
+            // Replace existing tag
+            return url.replaceAll("\\?tag=[^&]+", "?tag=" + tag);
+        } else if (url.contains("&tag=")) {
+            // Replace existing tag
+            return url.replaceAll("&tag=[^&]+", "&tag=" + tag);
+        } else {
+            // Append tag to the URL
+            if (url.contains("?")) {
+                return url + "&tag=" + tag;
+            } else {
+                return url + "?tag=" + tag;
+            }
+        }
+    }
 
     private String getStoreFromUrl(String url) {
         if (url.contains("myntra.com")) {
