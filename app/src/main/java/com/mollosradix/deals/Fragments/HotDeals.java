@@ -1,80 +1,66 @@
 package com.mollosradix.deals.Fragments;
 
-import static android.content.ContentValues.TAG;
-
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.text.Html;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.GridLayout;
 import android.widget.ProgressBar;
-import android.widget.Toast;
-
 import com.google.android.material.snackbar.Snackbar;
-import com.mollosradix.deals.BaseActivity;
+import com.mollosradix.deals.BaseFragment;
 import com.mollosradix.deals.DealsAdapter;
 import com.mollosradix.deals.DealsModel;
+import com.mollosradix.deals.MainActivity;
 import com.mollosradix.deals.R;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class HotDeals extends BaseActivity {
+public class HotDeals extends BaseFragment {
 
     private ProgressBar progressBar;
+//    private GridLayout skeletonLayout;
     private RecyclerView recyclerView;
     private DealsAdapter adapter;
     private List<DealsModel> hotDealData = new ArrayList<>();
-    private String actualPrice, dealUrl;
-    private int currentPage = 1; // Track current page
+    private int currentPage = 1;
     private static final String TRACKING_ID = "deals026f-21";
     private static final String ARG_MESSAGE = "message";
     private String message = null;
 
-    public HotDeals() {
-        // Required empty public constructor
-    }
+    public HotDeals() {}
 
     public static HotDeals newInstance(String query) {
         HotDeals fragment = new HotDeals();
         Bundle args = new Bundle();
-        args.putString("query", query);
+        args.putString(ARG_MESSAGE, query);
         fragment.setArguments(args);
         return fragment;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (getArguments() != null) {
             message = getArguments().getString(ARG_MESSAGE);
         }
         View view = inflater.inflate(R.layout.fragment_hot_deals, container, false);
         progressBar = view.findViewById(R.id.progressbar);
+//        skeletonLayout = view.findViewById(R.id.skeleton_layout);
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
         adapter = new DealsAdapter(hotDealData, getActivity());
@@ -82,18 +68,26 @@ public class HotDeals extends BaseActivity {
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
                 if (!recyclerView.canScrollVertically(1)) {
-                    // Load next page when reached to the end
                     currentPage++;
                     checkAndLoadData();
                 }
             }
         });
+//        showSkeletonLoading();
         checkAndLoadData();
         return view;
     }
 
+//    private void showSkeletonLoading() {
+//        skeletonLayout.setVisibility(View.VISIBLE);
+//        recyclerView.setVisibility(View.GONE);
+//    }
+//
+//    private void hideSkeletonLoading() {
+//        skeletonLayout.setVisibility(View.GONE);
+//        recyclerView.setVisibility(View.VISIBLE);
+//    }
     private void checkAndLoadData() {
         if (isConnectedToInternet()) {
             new HotDealsNetwork().execute();
@@ -107,12 +101,7 @@ public class HotDeals extends BaseActivity {
                 "No internet connection.",
                 Snackbar.LENGTH_INDEFINITE);
         snackbar.setActionTextColor(ContextCompat.getColor(requireContext(), R.color.day_background));
-        snackbar.setAction("Retry", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkAndLoadData();
-            }
-        }).show();
+        snackbar.setAction("Retry", v -> checkAndLoadData()).show();
     }
 
     @Override
@@ -120,130 +109,30 @@ public class HotDeals extends BaseActivity {
         new HotDealsNetwork().execute();
     }
 
-    public class HotDealsNetwork extends AsyncTask<Void, Integer, List<DealsModel>> {
+    private class HotDealsNetwork extends AsyncTask<Void, Void, List<DealsModel>> {
 
         @Override
         protected void onPreExecute() {
             progressBar.setVisibility(View.VISIBLE);
-            super.onPreExecute();
         }
 
         @Override
         protected List<DealsModel> doInBackground(Void... voids) {
-            if (!isConnectedToInternet()) {
-                return null;
-            }
             List<DealsModel> data = new ArrayList<>();
-            Document doc;
             try {
-                if (message != null) {
-                    doc = Jsoup.connect("https://www.desidime.com/selective_search?keyword=" + URLEncoder.encode(message, "UTF-8") + "&page=" + currentPage).get();
-                    Elements elements = doc.select(".gridfix.cf.gb20 > li");
-                    Log.d("HotDealsNetwork", "Number of elements found: " + elements.size());
-                    Log.d("HotDealsNetwork", "Document fetched: " + doc.outerHtml());
-                    for (Element deal : elements) {
-                        String imageUrl = deal.select(".l-deal-box-image img").attr("data-src"); // Image URL
-                        String title = deal.select(".l-deal-dsp a").text(); // Title
-                        String price = deal.select(".l-deal-price").text(); // Price
-                        String discount = deal.select(".l-deal-discount").text(); // Discount
-                        String store = deal.select(".l-deal-store a").text(); // Store
-                        String time = deal.select(".l-promotime").text().trim(); // Time (trim to remove leading/trailing whitespace)
+                String url = message != null
+                        ? "https://www.desidime.com/selective_search?keyword=" + URLEncoder.encode(message, "UTF-8") + "&page=" + currentPage
+                        : "https://www.desidime.com/new?page=" + currentPage;
 
-                        // Extracting the URL associated with 'Get Deal' button
+                Document doc = Jsoup.connect(url).get();
+                Elements elements = message != null
+                        ? doc.select(".gridfix.cf.gb20 > li")
+                        : doc.select(".gridfix .l-deal-box");
 
-                        String extractedURL = extractURL(deal.select(".btn-lgetdeal").attr("data-href"));
-
-                        // Fallback if 'data-href' is not present
-                        if (extractedURL.isEmpty()) {
-                            extractedURL = extractURL(deal.select(".btn-lgetdeal").attr("data-href-alt"));
-                        }
-
-                        if (!extractedURL.isEmpty()) {
-                            if (extractedURL.contains("amazon.in")) {
-                                dealUrl = appendTrackingId(extractedURL, TRACKING_ID);
-                            } else {
-                                dealUrl = extractedURL;
-                            }
-                        }
-
-                        if (TextUtils.isEmpty(title)) {
-                            title = "Title not available";
-                        }
-                        if (!TextUtils.isEmpty(price) && !TextUtils.isEmpty(discount)) {
-                            actualPrice = calculateActualPrice(discount, price);
-                        }
-                        if (TextUtils.isEmpty(price)) {
-                            actualPrice = null;
-                            price = "Price not available";
-                        }
-                        if (TextUtils.isEmpty(discount)) {
-                            actualPrice = null;
-                            discount = "Discount not available";
-                        }
-                        if (TextUtils.isEmpty(store)) {
-                            store = "Store not available";
-                        }
-                        if (TextUtils.isEmpty(time)) {
-                            time = "Time not available";
-                        }
-                        if (TextUtils.isEmpty(imageUrl)) {
-                            imageUrl = "Image not available";
-                        }
-                        if (TextUtils.isEmpty(dealUrl)) {
-                            dealUrl = "Deal URL not available";
-                        }
-
-                        DealsModel dealdata = new DealsModel(imageUrl, title, price, actualPrice, time, store, dealUrl, discount);
-                        data.add(dealdata);
-                    }
-                } else {
-                    doc = Jsoup.connect("https://www.desidime.com/new?page=" + currentPage).get();
-                    Elements elements = doc.select(".gridfix .l-deal-box");
-                    for (Element deal : elements) {
-                        String imageUrl = deal.select(".l-deal-box-image img").attr("data-src");
-                        String title = deal.select(".l-deal-dsp a").text();
-                        String price = deal.select(".l-deal-price").text();
-                        String discount = deal.select(".l-deal-discount").text();
-                        String store = deal.select(".l-deal-store").text();
-                        String time = deal.select(".l-promotime").text();
-                        String extractedURL = extractURL(deal.select(".btn-lgetdeal").attr("data-href"));
-                        if (!extractedURL.isEmpty()) {
-                            if (extractedURL.contains("amazon.in")) {
-                                dealUrl = appendTrackingId(extractedURL, TRACKING_ID);
-                            } else {
-                                dealUrl = extractedURL;
-                            }
-                        }
-
-                        if (TextUtils.isEmpty(title)) {
-                            title = "Title not available";
-                        }
-                        if (!TextUtils.isEmpty(price) && !TextUtils.isEmpty(discount)) {
-                            actualPrice = calculateActualPrice(discount, price);
-                        }
-                        if (TextUtils.isEmpty(price)) {
-                            actualPrice = null;
-                            price = "Price not available";
-                        }
-                        if (TextUtils.isEmpty(discount)) {
-                            actualPrice = null;
-                            discount = "Discount not available";
-                        }
-                        if (TextUtils.isEmpty(store)) {
-                            store = "Store not available";
-                        }
-                        if (TextUtils.isEmpty(time)) {
-                            time = "Time not available";
-                        }
-                        if (TextUtils.isEmpty(imageUrl)) {
-                            imageUrl = "Image not available";
-                        }
-                        if (TextUtils.isEmpty(dealUrl)) {
-                            dealUrl = "Deal URL not available";
-                        }
-
-                        DealsModel dealdata = new DealsModel(imageUrl, title, price, actualPrice, time, store, dealUrl, discount);
-                        data.add(dealdata);
+                for (Element deal : elements) {
+                    DealsModel dealData = parseDeal(deal);
+                    if (dealData != null) {
+                        data.add(dealData);
                     }
                 }
             } catch (IOException e) {
@@ -254,18 +143,14 @@ public class HotDeals extends BaseActivity {
 
         @Override
         protected void onPostExecute(List<DealsModel> newDeals) {
-            super.onPostExecute(newDeals);
             progressBar.setVisibility(View.GONE);
-            if (newDeals == null || newDeals.isEmpty()) {
-                if (hotDealData.isEmpty()) {
-                    Snackbar.make(requireActivity().findViewById(android.R.id.content), "No deals found.", Snackbar.LENGTH_LONG).show();
-                } else {
-                    Snackbar.make(requireActivity().findViewById(android.R.id.content), "No more deals found.", Snackbar.LENGTH_LONG).show();
-                }
+            if (newDeals.isEmpty()) {
+                Snackbar.make(requireActivity().findViewById(android.R.id.content),
+                        hotDealData.isEmpty() ? "No deals found." : "No more deals found.",
+                        Snackbar.LENGTH_LONG).show();
             } else {
                 if (currentPage == 1) {
-                    hotDealData.clear(); // Clear existing data when loading the first page
-                    adapter.notifyDataSetChanged(); // Notify adapter about the dataset change
+                    hotDealData.clear();
                 }
                 int startPosition = hotDealData.size();
                 hotDealData.addAll(newDeals);
@@ -273,51 +158,73 @@ public class HotDeals extends BaseActivity {
             }
         }
 
-        private String calculateActualPrice(String discount, String price) {
-            int length = discount.length(), aprice, cal = 0;
-            float f;
-            if (length == 6) {
-                aprice = Integer.parseInt(discount.substring(0, 1));
-                f = (float) aprice / 100;
-                cal = (int) (Float.parseFloat(price) / (1 - f));
-            } else if (length == 7) {
-                aprice = Integer.parseInt(discount.substring(0, 2));
-                f = (float) aprice / 100;
-                cal = (int) (Float.parseFloat(price) / (1 - f));
-            } else if (length == 8) {
-                aprice = Integer.parseInt(discount.substring(0, 3));
-                f = (float) aprice / 100;
-                cal = (int) (Float.parseFloat(price) / (1 - f));
+        private DealsModel parseDeal(Element deal) {
+            String imageUrl = deal.select(".l-deal-box-image img").attr("data-src");
+            String title = deal.select(".l-deal-dsp a").text();
+            String price = deal.select(".l-deal-price").text();
+            String discount = deal.select(".l-deal-discount").text();
+            String store = deal.select(".l-deal-store a").text();
+            String time = deal.select(".l-promotime").text().trim();
+            String extractedURL = extractURL(deal.select(".btn-lgetdeal").attr("data-href"));
+
+            if (extractedURL.isEmpty()) {
+                extractedURL = extractURL(deal.select(".btn-lgetdeal").attr("data-href-alt"));
             }
-            return String.valueOf(cal);
+
+            // Return the original URL if both are empty
+            if (extractedURL.isEmpty()) {
+                return new DealsModel(
+                        imageUrl.isEmpty() ? "Image not available" : imageUrl,
+                        title.isEmpty() ? "Title not available" : title,
+                        price.isEmpty() ? "Price not available" : price,
+                        !TextUtils.isEmpty(price) && !TextUtils.isEmpty(discount) ? calculateActualPrice(discount, price) : null,
+                        time.isEmpty() ? "Time not available" : time,
+                        store.isEmpty() ? "Store not available" : store,
+                        "Deal URL not available",  // Placeholder
+                        discount.isEmpty() ? "Discount not available" : discount
+                );
+            }
+
+            String dealUrl = extractedURL.contains("amazon.in") ? appendTrackingId(extractedURL, TRACKING_ID) : extractedURL;
+
+            return new DealsModel(
+                    imageUrl.isEmpty() ? "Image not available" : imageUrl,
+                    title.isEmpty() ? "Title not available" : title,
+                    price.isEmpty() ? "Price not available" : price,
+                    !TextUtils.isEmpty(price) && !TextUtils.isEmpty(discount) ? calculateActualPrice(discount, price) : null,
+                    time.isEmpty() ? "Time not available" : time,
+                    store.isEmpty() ? "Store not available" : store,
+                    dealUrl,
+                    discount.isEmpty() ? "Discount not available" : discount
+            );
+        }
+
+        private String calculateActualPrice(String discount, String price) {
+            String numericDiscount = discount.replaceAll("[^0-9]", "");
+            if (TextUtils.isEmpty(numericDiscount)) {
+                return price;
+            }
+            int aprice = Integer.parseInt(numericDiscount);
+            float f = (float) aprice / 100;
+            return String.valueOf((int) (Float.parseFloat(price) / (1 - f)));
         }
 
         private String extractURL(String input) {
             try {
-                // Regular expression pattern to match the URL part after 'url='
                 String regex = "url=(.*)";
-                Pattern pattern = Pattern.compile(regex);
-                Matcher matcher = pattern.matcher(input);
-
-                // Extract and return the URL
+                Matcher matcher = Pattern.compile(regex).matcher(input);
                 if (matcher.find()) {
                     String encodedURL = matcher.group(1);
                     return URLDecoder.decode(encodedURL, StandardCharsets.UTF_8.toString());
-                } else {
-                    return input; // Return null if no match is found
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                return null;
             }
+            return input;  // Return original input if no match found
         }
 
         private String appendTrackingId(String url, String trackingId) {
-            if (url.contains("?")) {
-                return url + "&tag=" + trackingId;
-            } else {
-                return url + "?tag=" + trackingId;
-            }
+            return url.contains("?") ? url + "&tag=" + trackingId : url + "?tag=" + trackingId;
         }
     }
 }
