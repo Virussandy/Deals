@@ -1,6 +1,9 @@
 package com.mollosradix.deals;
 
 import android.content.Context;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
@@ -15,8 +18,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class URLFilter {
-    private FirebaseDatabase firebaseDatabase;
-    private DatabaseReference configRef;
     private String psc;
     private String linkCode;
     private String language;
@@ -26,13 +27,13 @@ public class URLFilter {
     public URLFilter(Context context) {
         // Initialize Firebase Database
         FirebaseApp.initializeApp(context);
-        firebaseDatabase = FirebaseDatabase.getInstance();
-        configRef = firebaseDatabase.getReference("amazon_config");
+        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+        DatabaseReference configRef = firebaseDatabase.getReference("amazon_config");
 
         // Fetch configuration values from Firebase Realtime Database
         configRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     psc = dataSnapshot.child("psc").getValue(String.class);
                     linkCode = dataSnapshot.child("linkCode").getValue(String.class);
@@ -43,9 +44,12 @@ public class URLFilter {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.err.println("Error fetching config from Firebase");
-                databaseError.toException().printStackTrace();
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                String tag = "FirebaseError";
+                String errorMessage = "Error fetching config from Firebase";
+
+                // Log error message with detailed information
+                Log.e(tag, errorMessage, databaseError.toException());
             }
         });
     }
@@ -82,7 +86,7 @@ public class URLFilter {
                 }
             } catch (UnsupportedEncodingException e) {
                 System.err.println("Error decoding URL");
-                e.printStackTrace();
+                System.out.println(e.getMessage());
                 return "Error decoding URL";
             }
         }

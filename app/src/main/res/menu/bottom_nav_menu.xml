@@ -2,16 +2,16 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/hotdeals"
-        android:title="Hot Deals"
-        android:icon="@drawable/ic_hotsdeals"/>
+        android:id="@+id/hotDeals"
+        android:title="@string/hot_deals"
+        android:icon="@drawable/ic_hot"/>
     <item
-        android:id="@+id/realtimedeals"
-        android:title="RealTime Deals"
-        android:icon="@drawable/ic_realtimedeal"/>
+        android:id="@+id/realtimeDeals"
+        android:title="@string/realtime_deals"
+        android:icon="@drawable/ic_realtime"/>
     <item
-        android:id="@+id/hourdeals"
-        android:title="Hour Deals"
-        android:icon="@drawable/ic_hoursdeal"/>
+        android:id="@+id/hourDeals"
+        android:title="@string/hour_deals"
+        android:icon="@drawable/ic_hour"/>
 
 </menu>

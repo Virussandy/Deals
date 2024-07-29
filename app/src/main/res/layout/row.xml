@@ -24,11 +24,10 @@
                 android:layout_gravity="center"
                 android:layout_width="match_parent"
                 android:cropToPadding="true"
-                android:layout_height="200dp" />
+                android:layout_height="250dp" />
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/name"
-                android:textStyle="bold"
                 android:layout_marginTop="5dp"
                 android:layout_gravity="center"
                 android:ellipsize="end"
@@ -40,7 +39,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal">
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/costPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:gravity="center"
+                    android:layout_gravity="center" />
+                <Space
+                    android:layout_width="16dp"
+                    android:layout_height="wrap_content"/>
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/sellPrice"
                     android:textStyle="bold"
@@ -49,22 +60,7 @@
                     android:layout_width="wrap_content"
                     android:layout_gravity="center"
                     android:gravity="center"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintHorizontal_weight="1"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/costPrice"
-                    app:layout_constraintTop_toTopOf="parent" />
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/costPrice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:gravity="center"
-                    android:layout_gravity="center"
-                    app:layout_constraintHorizontal_weight="1"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/sellPrice"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:layout_height="wrap_content" />
             </LinearLayout>
 
             <com.google.android.material.textview.MaterialTextView
@@ -104,9 +100,9 @@
                     android:id="@+id/button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Shop Now"
+                    android:text="@string/shop_now"
                     android:layout_gravity="center"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.AppCompat.Button.Colored"
                     app:layout_constraintHorizontal_weight="1"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/shopImage"
@@ -154,7 +150,8 @@
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/send"/>
+                    android:src="@drawable/send"
+                    android:contentDescription="@string/share_image" />
 
             </com.google.android.material.card.MaterialCardView>
 

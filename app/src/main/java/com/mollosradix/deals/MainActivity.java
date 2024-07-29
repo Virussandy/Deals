@@ -7,19 +7,19 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.SearchView;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.color.DynamicColors;
 import com.mollosradix.deals.Fragments.HotDeals;
 import com.mollosradix.deals.Fragments.HourDeals;
-import com.mollosradix.deals.Fragments.Realtimedeals;
+import com.mollosradix.deals.Fragments.RealtimeDeals;
 
-public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity {
 
     private SearchView searchView;
     private HourDeals hourDeals;
-    private Realtimedeals realtimedeals;
+    private RealtimeDeals realtimedeals;
     private HotDeals hotDeals;
 
     @Override
@@ -30,47 +30,47 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         }
         setContentView(R.layout.activity_main);
 
-
         // Initialize fragments here
         hourDeals = new HourDeals();
-        realtimedeals = new Realtimedeals();
+        realtimedeals = new RealtimeDeals();
         hotDeals = HotDeals.newInstance(null);
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        bottomNavigationView.setOnNavigationItemSelectedListener(this);
-        bottomNavigationView.setSelectedItemId(R.id.hotdeals);
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            Fragment selectedFragment = null;
+            switch (item.getItemId()) {
+                case FragmentConstants.HOUR_DEALS_ID:
+                    selectedFragment = hourDeals;
+                    break;
+                case FragmentConstants.REALTIME_DEALS_ID:
+                    selectedFragment = realtimedeals;
+                    break;
+                case FragmentConstants.HOT_DEALS_ID:
+                    selectedFragment = hotDeals;
+                    break;
+            }
+            if (selectedFragment != null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.flFragment, selectedFragment)
+                        .addToBackStack(null) // Add to back stack to handle back navigation
+                        .commit();
+                collapseSearchView();
+            }
+            return true;
+        });
 
+        if (savedInstanceState == null) {
+            // Set the default fragment
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.flFragment, hotDeals)
+                    .commit();
+        }
 
         // Delay the update check to avoid blocking the main UI thread
         new Handler().postDelayed(() -> {
             CheckUpdate checkUpdate = new CheckUpdate(this);
             checkUpdate.check();
         }, 1000); // Delay of 1 second to ensure the main UI is displayed first
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.hourdeals:
-                if (hourDeals != null) {
-                    getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, hourDeals).commit();
-                }
-                collapseSearchView();
-                return true;
-            case R.id.realtimedeals:
-                if (realtimedeals != null) {
-                    getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, realtimedeals).commit();
-                }
-                collapseSearchView();
-                return true;
-            case R.id.hotdeals:
-                if (hotDeals != null) {
-                    getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, hotDeals).commit();
-                }
-                collapseSearchView();
-                return true;
-        }
-        return false;
     }
 
     private void collapseSearchView() {
@@ -91,7 +91,10 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             @Override
             public boolean onQueryTextSubmit(String query) {
                 HotDeals hotDealsFragment = HotDeals.newInstance(query);
-                getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, hotDealsFragment).commit();
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.flFragment, hotDealsFragment)
+                        .addToBackStack(null) // Add to back stack for navigation
+                        .commit();
                 return false;
             }
 

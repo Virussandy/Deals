@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".Fragments.Realtimedeals">
+    tools:context=".Fragments.RealtimeDeals">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView_realtimedeal"
+        android:id="@+id/recyclerView_realtimeDeal"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"

@@ -1,9 +1,11 @@
 package com.mollosradix.deals;
 
 import android.content.Context;
-import android.content.IntentFilter;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -11,52 +13,74 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.snackbar.Snackbar;
 
-public abstract class BaseFragment extends Fragment implements NetworkChangeReceiver.CheckInternetListener {
+public abstract class BaseFragment extends Fragment {
 
-    private NetworkChangeReceiver networkChangeReceiver;
     private Snackbar snackbar;
+    private ConnectivityManager.NetworkCallback networkCallback;
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        networkChangeReceiver = new NetworkChangeReceiver(this);
+        registerNetworkCallback();
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        requireContext().registerReceiver(networkChangeReceiver, filter);
+    public void onDetach() {
+        super.onDetach();
+        unregisterNetworkCallback();
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        requireContext().unregisterReceiver(networkChangeReceiver);
+    private void registerNetworkCallback() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(@NonNull Network network) {
+                new Handler(Looper.getMainLooper()).post(() -> onNetworkChanged(true));
+            }
+
+            @Override
+            public void onLost(@NonNull Network network) {
+                new Handler(Looper.getMainLooper()).post(() -> onNetworkChanged(false));
+            }
+        };
+
+        connectivityManager.registerDefaultNetworkCallback(networkCallback);
     }
 
-    @Override
-    public void onNetworkChanged(boolean isConnected) {
-        if (!isConnected) {
-            if (snackbar == null || !snackbar.isShown()) {
-                snackbar = Snackbar.make(requireActivity().findViewById(android.R.id.content),
-                        "No internet connection.",
-                        Snackbar.LENGTH_INDEFINITE);
-                snackbar.setActionTextColor(ContextCompat.getColor(requireContext(), R.color.day_background));
-                snackbar.setAction("Reconnect", v -> {
-                    if (isConnectedToInternet()) {
-                        onNetworkReconnect();
-                        snackbar.dismiss();
-                    } else {
-                        onNetworkChanged(false);
+    private void unregisterNetworkCallback() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (networkCallback != null) {
+            connectivityManager.unregisterNetworkCallback(networkCallback);
+        }
+    }
+
+    private void onNetworkChanged(boolean isConnected) {
+        if (getActivity() != null) {
+            new Handler(Looper.getMainLooper()).post(() -> {
+                if (!isConnected) {
+                    if (snackbar == null || !snackbar.isShown()) {
+                        snackbar = Snackbar.make(requireActivity().findViewById(android.R.id.content),
+                                "No internet connection.",
+                                Snackbar.LENGTH_INDEFINITE);
+                        snackbar.setActionTextColor(ContextCompat.getColor(requireContext(), R.color.day_background));
+                        snackbar.setAction("Reconnect", v -> {
+                            if (isConnectedToInternet()) {
+                                onNetworkReconnect();
+                                snackbar.dismiss();
+                            } else {
+                                onNetworkChanged(false);
+                            }
+                        }).show();
                     }
-                }).show();
-            }
-        } else {
-            if (snackbar != null && snackbar.isShown()) {
-                snackbar.dismiss();
-                onNetworkReconnect();
-            }
+                } else {
+                    if (snackbar != null && snackbar.isShown()) {
+                        snackbar.dismiss();
+                        onNetworkReconnect();
+                    }
+                }
+            });
         }
     }
 
@@ -64,7 +88,7 @@ public abstract class BaseFragment extends Fragment implements NetworkChangeRece
 
     protected boolean isConnectedToInternet() {
         ConnectivityManager cm = (ConnectivityManager) requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        NetworkCapabilities capabilities = cm.getNetworkCapabilities(cm.getActiveNetwork());
+        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
     }
 }

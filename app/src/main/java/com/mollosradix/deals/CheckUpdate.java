@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
 import com.google.firebase.database.DataSnapshot;
@@ -15,7 +16,7 @@ import com.google.firebase.database.ValueEventListener;
 
 public class CheckUpdate {
 
-    private Context context;
+    private final Context context;
     private DatabaseReference databaseReference;
     private static final String TAG = "CheckUpdate";
 
@@ -31,13 +32,13 @@ public class CheckUpdate {
     public void check() {
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 String latestVersion = dataSnapshot.getValue(String.class);
                 checkForUpdate(latestVersion);
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
+            public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e(TAG, "Failed to fetch latest version from database", databaseError.toException());
             }
         });
@@ -67,9 +68,7 @@ public class CheckUpdate {
                     Intent intent = new Intent(Intent.ACTION_VIEW, playStoreUri);
                     context.startActivity(intent);
                 })
-                .setNegativeButton("Cancel", (dialog, which) -> {
-                    dialog.dismiss();
-                }).setCancelable(false); // Prevent the user from dismissing the dialog without updating
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss()).setCancelable(false); // Prevent the user from dismissing the dialog without updating
 
         AlertDialog dialog = builder.create();
         dialog.show();

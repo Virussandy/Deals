@@ -25,8 +25,8 @@ import java.util.List;
 
 public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHolder> {
 
-    private  List<DealsModel> list;
-    private Context context;
+    private final List<DealsModel> list;
+    private final Context context;
 
     public DealsAdapter(List<DealsModel> data, FragmentActivity application) {
         this.list = data;
@@ -82,7 +82,6 @@ public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHol
 
     @Override
     public int getItemCount() {
-//        Log.d(TAG, "getItemCount: "+list.size());
         return list.size();
     }
 
