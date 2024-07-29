@@ -1,30 +1,42 @@
 package com.mollosradix.deals.Fragments;
 
+import static android.content.ContentValues.TAG;
+
+import android.content.Intent;
+import java.net.URL;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridLayout;
 import android.widget.ProgressBar;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.mollosradix.deals.BaseFragment;
 import com.mollosradix.deals.DealsAdapter;
 import com.mollosradix.deals.DealsModel;
-import com.mollosradix.deals.MainActivity;
 import com.mollosradix.deals.R;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,21 +46,25 @@ import java.util.regex.Pattern;
 public class HotDeals extends BaseFragment {
 
     private ProgressBar progressBar;
-//    private GridLayout skeletonLayout;
     private RecyclerView recyclerView;
     private DealsAdapter adapter;
     private List<DealsModel> hotDealData = new ArrayList<>();
     private int currentPage = 1;
-    private static final String TRACKING_ID = "deals026f-21";
-    private static final String ARG_MESSAGE = "message";
+    private boolean isLoading = false;
     private String message = null;
+
+    private String psc;
+    private String linkCode;
+    private String language;
+    private String ref;
+    private String trackingId;
 
     public HotDeals() {}
 
     public static HotDeals newInstance(String query) {
         HotDeals fragment = new HotDeals();
         Bundle args = new Bundle();
-        args.putString(ARG_MESSAGE, query);
+        args.putString("message", query);
         fragment.setArguments(args);
         return fragment;
     }
@@ -56,11 +72,10 @@ public class HotDeals extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (getArguments() != null) {
-            message = getArguments().getString(ARG_MESSAGE);
+            message = getArguments().getString("message");
         }
         View view = inflater.inflate(R.layout.fragment_hot_deals, container, false);
         progressBar = view.findViewById(R.id.progressbar);
-//        skeletonLayout = view.findViewById(R.id.skeleton_layout);
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
         adapter = new DealsAdapter(hotDealData, getActivity());
@@ -68,28 +83,48 @@ public class HotDeals extends BaseFragment {
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                if (!recyclerView.canScrollVertically(1)) {
+                if (!recyclerView.canScrollVertically(1) && !isLoading) {
                     currentPage++;
                     checkAndLoadData();
                 }
             }
         });
-//        showSkeletonLoading();
+
+        // Initialize Firebase
+        FirebaseApp.initializeApp(getActivity());
+        fetchFirebaseConfig();
+
         checkAndLoadData();
         return view;
     }
 
-//    private void showSkeletonLoading() {
-//        skeletonLayout.setVisibility(View.VISIBLE);
-//        recyclerView.setVisibility(View.GONE);
-//    }
-//
-//    private void hideSkeletonLoading() {
-//        skeletonLayout.setVisibility(View.GONE);
-//        recyclerView.setVisibility(View.VISIBLE);
-//    }
+    private void fetchFirebaseConfig() {
+        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+        DatabaseReference configRef = firebaseDatabase.getReference("amazon_config");
+
+        configRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    psc = dataSnapshot.child("psc").getValue(String.class);
+                    linkCode = dataSnapshot.child("linkCode").getValue(String.class);
+                    language = dataSnapshot.child("language").getValue(String.class);
+                    ref = dataSnapshot.child("ref").getValue(String.class);
+                    trackingId = dataSnapshot.child("trackingId").getValue(String.class);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e("FirebaseError", "Error fetching config from Firebase");
+                databaseError.toException().printStackTrace();
+            }
+        });
+    }
+
     private void checkAndLoadData() {
         if (isConnectedToInternet()) {
+            isLoading = true;
             new HotDealsNetwork().execute();
         } else {
             showNoConnectionSnackbar();
@@ -100,7 +135,7 @@ public class HotDeals extends BaseFragment {
         Snackbar snackbar = Snackbar.make(requireActivity().findViewById(android.R.id.content),
                 "No internet connection.",
                 Snackbar.LENGTH_INDEFINITE);
-        snackbar.setActionTextColor(ContextCompat.getColor(requireContext(), R.color.day_background));
+        snackbar.setActionTextColor(getResources().getColor(R.color.day_background));
         snackbar.setAction("Retry", v -> checkAndLoadData()).show();
     }
 
@@ -114,6 +149,24 @@ public class HotDeals extends BaseFragment {
         @Override
         protected void onPreExecute() {
             progressBar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected void onPostExecute(List<DealsModel> newDeals) {
+            progressBar.setVisibility(View.GONE);
+            isLoading = false;
+            if (newDeals.isEmpty()) {
+                Snackbar.make(requireActivity().findViewById(android.R.id.content),
+                        hotDealData.isEmpty() ? "No deals found." : "No more deals found.",
+                        Snackbar.LENGTH_LONG).show();
+            } else {
+                if (currentPage == 1) {
+                    hotDealData.clear();
+                }
+                int startPosition = hotDealData.size();
+                hotDealData.addAll(newDeals);
+                adapter.notifyItemRangeInserted(startPosition, newDeals.size());
+            }
         }
 
         @Override
@@ -141,23 +194,6 @@ public class HotDeals extends BaseFragment {
             return data;
         }
 
-        @Override
-        protected void onPostExecute(List<DealsModel> newDeals) {
-            progressBar.setVisibility(View.GONE);
-            if (newDeals.isEmpty()) {
-                Snackbar.make(requireActivity().findViewById(android.R.id.content),
-                        hotDealData.isEmpty() ? "No deals found." : "No more deals found.",
-                        Snackbar.LENGTH_LONG).show();
-            } else {
-                if (currentPage == 1) {
-                    hotDealData.clear();
-                }
-                int startPosition = hotDealData.size();
-                hotDealData.addAll(newDeals);
-                adapter.notifyItemRangeInserted(startPosition, newDeals.size());
-            }
-        }
-
         private DealsModel parseDeal(Element deal) {
             String imageUrl = deal.select(".l-deal-box-image img").attr("data-src");
             String title = deal.select(".l-deal-dsp a").text();
@@ -171,7 +207,6 @@ public class HotDeals extends BaseFragment {
                 extractedURL = extractURL(deal.select(".btn-lgetdeal").attr("data-href-alt"));
             }
 
-            // Return the original URL if both are empty
             if (extractedURL.isEmpty()) {
                 return new DealsModel(
                         imageUrl.isEmpty() ? "Image not available" : imageUrl,
@@ -185,7 +220,7 @@ public class HotDeals extends BaseFragment {
                 );
             }
 
-            String dealUrl = extractedURL.contains("amazon.in") ? appendTrackingId(extractedURL, TRACKING_ID) : extractedURL;
+            String dealUrl = extractedURL.contains("amazon.in") ? buildAmazonUrl(extractedURL) : extractedURL;
 
             return new DealsModel(
                     imageUrl.isEmpty() ? "Image not available" : imageUrl,
@@ -209,22 +244,71 @@ public class HotDeals extends BaseFragment {
             return String.valueOf((int) (Float.parseFloat(price) / (1 - f)));
         }
 
-        private String extractURL(String input) {
+        private String extractURL(String url) {
             try {
                 String regex = "url=(.*)";
-                Matcher matcher = Pattern.compile(regex).matcher(input);
+                Matcher matcher = Pattern.compile(regex).matcher(url);
                 if (matcher.find()) {
                     String encodedURL = matcher.group(1);
-                    return URLDecoder.decode(encodedURL, StandardCharsets.UTF_8.toString());
+                    return extractedURL(URLDecoder.decode(encodedURL, StandardCharsets.UTF_8.toString()));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return input;  // Return original input if no match found
+            return url;
         }
 
-        private String appendTrackingId(String url, String trackingId) {
-            return url.contains("?") ? url + "&tag=" + trackingId : url + "?tag=" + trackingId;
+        private String extractedURL(String url) {
+            try {
+                URL urlObj = new URL(url);
+                String query = urlObj.getQuery();
+
+                if (query != null) {
+                    // Split query parameters
+                    String[] queryParams = query.split("&");
+                    for (String param : queryParams) {
+                        if (param.startsWith("url=")) {
+                            // Extract the actual URL from the `url` parameter
+                            String actualUrl = URLDecoder.decode(param.substring(4), "UTF-8");
+                            URL actualUrlObj = new URL(actualUrl);
+
+                            // Reconstruct the URL with its original query parameters
+                            String actualPath = actualUrlObj.getPath();
+                            String actualQuery = actualUrlObj.getQuery();
+                            StringBuilder filteredUrl = new StringBuilder(new URL(actualUrlObj.getProtocol(), actualUrlObj.getHost(), actualUrlObj.getPort(), actualPath).toString());
+
+                            if (actualQuery != null) {
+                                filteredUrl.append("?").append(actualQuery);
+                            }
+
+                            return filteredUrl.toString();
+                        }
+                    }
+                }
+
+                // If no `url` parameter is found, return the original URL without modifications
+                return new URL(urlObj.getProtocol(), urlObj.getHost(), urlObj.getPort(), urlObj.getPath()).toString();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return url;
+        }
+
+        private String buildAmazonUrl(String originalUrl) {
+            if (TextUtils.isEmpty(originalUrl) || psc == null || linkCode == null || language == null || ref == null || trackingId == null) {
+                return originalUrl; // Return the original URL if config is missing
+            }
+            try {
+                return originalUrl + (originalUrl.contains("?") ? "&" : "?")
+                        + "psc=" + URLEncoder.encode(psc, StandardCharsets.UTF_8.name())
+                        + "&linkCode=" + URLEncoder.encode(linkCode, StandardCharsets.UTF_8.name())
+                        + "&language=" + URLEncoder.encode(language, StandardCharsets.UTF_8.name())
+                        + "&ref=" + URLEncoder.encode(ref, StandardCharsets.UTF_8.name())
+                        + "&tag=" + URLEncoder.encode(trackingId, StandardCharsets.UTF_8.name());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return originalUrl;
         }
     }
 }

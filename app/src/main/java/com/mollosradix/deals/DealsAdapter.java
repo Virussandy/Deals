@@ -25,12 +25,13 @@ import java.util.List;
 
 public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHolder> {
 
-    private final List<DealsModel> list;
-    private final Context context;
+    private  List<DealsModel> list;
+    private Context context;
 
     public DealsAdapter(List<DealsModel> data, FragmentActivity application) {
         this.list = data;
         this.context = application;
+//        setHasStableIds(true);
     }
 
     @NonNull
@@ -53,7 +54,6 @@ public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHol
             holder.costprice.setText(deal.getOldPrice());
             holder.updateinfo.setText(deal.getUpdateTime());
             holder.costprice.setPaintFlags(holder.costprice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-
             holder.shopNow.setOnClickListener(view -> goToUrl(deal.getShopUrl()));
             holder.share.setOnClickListener(v -> shareItem(deal.getShopUrl()));
         }
@@ -82,6 +82,7 @@ public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHol
 
     @Override
     public int getItemCount() {
+//        Log.d(TAG, "getItemCount: "+list.size());
         return list.size();
     }
 

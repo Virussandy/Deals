@@ -2,14 +2,13 @@ package com.mollosradix.deals;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.SearchView;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.color.DynamicColors;
 import com.mollosradix.deals.Fragments.HotDeals;
@@ -18,7 +17,6 @@ import com.mollosradix.deals.Fragments.Realtimedeals;
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
 
-    private BottomNavigationView bottomNavigationView;
     private SearchView searchView;
     private HourDeals hourDeals;
     private Realtimedeals realtimedeals;
@@ -32,19 +30,22 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         }
         setContentView(R.layout.activity_main);
 
+
         // Initialize fragments here
         hourDeals = new HourDeals();
         realtimedeals = new Realtimedeals();
         hotDeals = HotDeals.newInstance(null);
 
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
         bottomNavigationView.setSelectedItemId(R.id.hotdeals);
 
-        // Initialize fragments
-        hourDeals = new HourDeals();
-        realtimedeals = new Realtimedeals();
-        hotDeals = HotDeals.newInstance(null); // Initialize HotDeals fragment
+
+        // Delay the update check to avoid blocking the main UI thread
+        new Handler().postDelayed(() -> {
+            CheckUpdate checkUpdate = new CheckUpdate(this);
+            checkUpdate.check();
+        }, 1000); // Delay of 1 second to ensure the main UI is displayed first
     }
 
     @Override
@@ -72,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         return false;
     }
 
-
     private void collapseSearchView() {
         if (searchView != null) {
             searchView.setQuery("", false);
@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         inflater.inflate(R.menu.menu, menu);
         MenuItem searchViewItem = menu.findItem(R.id.action_search);
         searchView = (SearchView) searchViewItem.getActionView();
+        assert searchView != null;
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {

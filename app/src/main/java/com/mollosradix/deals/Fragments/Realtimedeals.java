@@ -1,10 +1,14 @@
 package com.mollosradix.deals.Fragments;
 
+import static android.content.ContentValues.TAG;
+
 import android.os.AsyncTask;
 import android.os.Bundle;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +38,7 @@ public class Realtimedeals extends BaseFragment {
     private DealsAdapter adapter;
     private List<DealsModel> realTimeDealData;
     private int start = 0;
-    private URLFilter urlFilter = new URLFilter();
+    private URLFilter urlFilter = new URLFilter(getActivity());
 
     public Realtimedeals() {
         // Required empty public constructor
@@ -123,9 +127,9 @@ public class Realtimedeals extends BaseFragment {
 
         private String getElementAttr(Element element, String className, String attr) {
             Element el = element.getElementsByClass(className).first();
-            return el != null ? el.attr(attr) : "";
+//            Log.d(TAG, "getElementAttr: "+el.attr(attr)+"\n");
+            return el.attr(attr);
         }
-
         private String getTimeInfo(Element element) {
             String timeInfo = getElementText(element, "timeinfo");
             return timeInfo.isEmpty() ? "Updated recently" : timeInfo;

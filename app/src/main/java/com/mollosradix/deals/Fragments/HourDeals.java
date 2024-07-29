@@ -32,7 +32,7 @@ public class HourDeals extends BaseFragment {
     private RecyclerView recyclerView;
     private DealsAdapter adapter;
     private List<DealsModel> hourDealData;
-    URLFilter urlFilter = new URLFilter();
+    URLFilter urlFilter = new URLFilter(getActivity());
 
     public HourDeals() {
         // Required empty public constructor

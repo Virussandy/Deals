@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "268586680374",
+    "firebase_url": "https://deals-f4eba-default-rtdb.firebaseio.com",
+    "project_id": "deals-f4eba",
+    "storage_bucket": "deals-f4eba.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:268586680374:android:666d7aa111fa896f0d1897",
+        "android_client_info": {
+          "package_name": "com.mollosradix.deals"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBo188HGKUx11c0AsdSDS-NJucODz4Vt0s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
