@@ -1,4 +1,4 @@
-package com.mollosradix.deals.Fragments;
+package com.mollosradix.deals.fragments;
 
 import android.os.Bundle;
 import androidx.core.content.ContextCompat;
@@ -8,7 +8,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
+
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.mollosradix.deals.BaseFragment;
 import com.mollosradix.deals.DealsAdapter;
@@ -27,17 +30,16 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 
-public class HourDeals extends BaseFragment {
+public class RealtimeDeals extends BaseFragment {
 
-    private ProgressBar progressBar;
+    private RelativeLayout progressBar;
     private RecyclerView recyclerView;
-    private DealsAdapter adapter;
-    private List<DealsModel> hourDealData;
-    URLFilter urlFilter = new URLFilter(getActivity());
-
+    private List<DealsModel> realTimeDealData;
+    private int start = 0;
+    private final URLFilter urlFilter = new URLFilter(getActivity());
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    public HourDeals() {
+    public RealtimeDeals() {
         // Required empty public constructor
     }
 
@@ -70,9 +72,9 @@ public class HourDeals extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_hour_deals, container, false);
+        View view = inflater.inflate(R.layout.fragment_realtimedeals, container, false);
+        recyclerView = view.findViewById(R.id.recyclerView_realtimeDeal);
         progressBar = view.findViewById(R.id.progressbar);
-        recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
         checkAndLoadData();
         return view;
@@ -85,7 +87,7 @@ public class HourDeals extends BaseFragment {
             requireActivity().runOnUiThread(() -> {
                 progressBar.setVisibility(View.GONE);
                 if (deals != null && !deals.isEmpty()) {
-                    hourDealData = deals;
+                    realTimeDealData = deals;
                     setList();
                 } else {
                     Toast.makeText(getContext(), "No Offer Found", Toast.LENGTH_SHORT).show();
@@ -104,61 +106,79 @@ public class HourDeals extends BaseFragment {
         try {
             connection.execute();
             doc = connection.get();
+            realTimeDealData = new ArrayList<>();
             Element content = doc.getElementById("lootdeal");
             assert content != null;
+            Elements imageLink = content.getElementsByClass("lazyload");
+            start = imageLink.size();
 
-            Elements imageLinks = content.getElementsByClass("lazyload");
-            Elements descriptions = content.getElementsByClass("anchor");
-            Elements timeInfo = content.getElementsByClass("timeinfo");
-            Elements currentPrices = content.getElementsByClass("cprice");
-            Elements originalPrices = content.getElementsByClass("oprice");
-            Elements shopLogos = content.getElementsByClass("divcenter1");
-            Elements links = content.getElementsByClass("myButton");
+            Elements elements = doc.getElementsByClass("px-xl-2 py-xl-1 col-6 col-sm-6 col-md-4 col-lg-3 col-xxl-3 col-xl-3 p-1");
 
-            List<DealsModel> dealsList = new ArrayList<>();
-
-            for (int i = 0; i < imageLinks.size(); i++) {
-                String productImgLink = imageLinks.get(i).attr("data-src");
-                String productDescription = descriptions.get(i).text();
-                String productTimeInfo = timeInfo.get(i).text();
-                String productCPrice = currentPrices.get(i).text();
-                String productSPrice = originalPrices.get(i).text();
-                String productShopLogo = StringUtils.capitalize(shopLogos.get(i).attr("store"));
-                String productMainLink = links.get(i).attr("href");
-
-                String productOff = 100 * (Integer.parseInt(productSPrice.replaceAll("[^0-9]", "")) -
-                        Integer.parseInt(productCPrice.replaceAll("[^0-9]", ""))) /
-                        Integer.parseInt(productSPrice.replaceAll("[^0-9]", "")) + "% OFF";
-
-                DealsModel hourDealsModel = new DealsModel();
-                hourDealsModel.setImageUrl(productImgLink);
-                hourDealsModel.setProductName(productDescription);
-                hourDealsModel.setUpdateTime(productTimeInfo);
-                hourDealsModel.setNewPrice(productCPrice);
-                hourDealsModel.setOldPrice(productSPrice);
-                hourDealsModel.setStoreLogoUrl(productShopLogo);
-                hourDealsModel.setShopUrl(urlFilter.getOriginalURL(productMainLink));
-                hourDealsModel.setOff(productOff);
-                dealsList.add(hourDealsModel);
+            for (Element element : elements) {
+                DealsModel deal = new DealsModel();
+                deal.setImageUrl(getElementAttr(element, "lazyload", "data-src"));
+                deal.setProductName(getElementText(element, "anchor"));
+                deal.setUpdateTime(getTimeInfo(element));
+                deal.setNewPrice(getCurrentPrice(element));
+                deal.setOldPrice(getOriginalPrice(element));
+                deal.setStoreLogoUrl(StringUtils.capitalize(getElementAttr(element, "imgleft", "title")));
+                deal.setShopUrl(urlFilter.getOriginalURL(getElementAttr(element, "myButton", "href")));
+                deal.setOff(calculateDiscount(deal.getOldPrice(), deal.getNewPrice()));
+                realTimeDealData.add(deal);
             }
-            return dealsList;
         } catch (IOException e) {
             System.out.println(e.getMessage());
-            return null;
+        }
+        return realTimeDealData;
+    }
+
+    private String getElementText(Element element, String className) {
+        Element el = element.getElementsByClass(className).first();
+        return el != null ? el.text() : "";
+    }
+
+    private String getElementAttr(Element element, String className, String attr) {
+        Element el = element.getElementsByClass(className).first();
+        return el != null ? el.attr(attr) : "";
+    }
+
+    private String getTimeInfo(Element element) {
+        String timeInfo = getElementText(element, "timeinfo");
+        return timeInfo.isEmpty() ? "Updated recently" : timeInfo;
+    }
+
+    private String getCurrentPrice(Element element) {
+        return getElementText(element, "cprice");
+    }
+
+    private String getOriginalPrice(Element element) {
+        return getElementText(element, "oprice");
+    }
+
+    private String calculateDiscount(String oldPrice, String newPrice) {
+        try {
+            int oldPriceValue = Integer.parseInt(oldPrice.replaceAll("[^0-9]", ""));
+            int newPriceValue = Integer.parseInt(newPrice.replaceAll("[^0-9]", ""));
+            return (100 * (oldPriceValue - newPriceValue) / oldPriceValue) + "% OFF";
+        } catch (NumberFormatException e) {
+            return "N/A"; // Handle parsing error
         }
     }
 
-    public void setList() {
-        if (hourDealData != null && !hourDealData.isEmpty()) {
+    private void setList() {
+        if (realTimeDealData != null && !realTimeDealData.isEmpty()) {
+            // Remove hour deals
+            if (start > 0) {
+                realTimeDealData.subList(0, start).clear();
+            }
             displayData();
-            adapter.notifyItemRangeInserted(0, hourDealData.size());
         } else {
             Toast.makeText(getContext(), "No Offer Found", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void displayData() {
-        adapter = new DealsAdapter(hourDealData, getActivity());
+        DealsAdapter adapter = new DealsAdapter(realTimeDealData, getActivity());
         recyclerView.setAdapter(adapter);
     }
 }

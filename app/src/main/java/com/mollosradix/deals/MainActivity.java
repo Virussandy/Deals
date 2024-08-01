@@ -8,19 +8,21 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.SearchView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.color.DynamicColors;
-import com.mollosradix.deals.Fragments.HotDeals;
-import com.mollosradix.deals.Fragments.HourDeals;
-import com.mollosradix.deals.Fragments.RealtimeDeals;
+import com.mollosradix.deals.fragments.HotDeals;
+import com.mollosradix.deals.fragments.HourDeals;
+import com.mollosradix.deals.fragments.RealtimeDeals;
 
 public class MainActivity extends AppCompatActivity {
 
     private SearchView searchView;
-    private HourDeals hourDeals;
-    private RealtimeDeals realtimedeals;
-    private HotDeals hotDeals;
+    private HourDeals hour;
+    private RealtimeDeals realtime;
+    private HotDeals hot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,22 +33,26 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Initialize fragments here
-        hourDeals = new HourDeals();
-        realtimedeals = new RealtimeDeals();
-        hotDeals = HotDeals.newInstance(null);
+        hour = new HourDeals();
+        realtime = new RealtimeDeals();
+        hot = HotDeals.newInstance(null);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        //getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             switch (item.getItemId()) {
                 case FragmentConstants.HOUR_DEALS_ID:
-                    selectedFragment = hourDeals;
+                    selectedFragment = hour;
                     break;
                 case FragmentConstants.REALTIME_DEALS_ID:
-                    selectedFragment = realtimedeals;
+                    selectedFragment = realtime;
                     break;
                 case FragmentConstants.HOT_DEALS_ID:
-                    selectedFragment = hotDeals;
+                    selectedFragment = hot;
                     break;
             }
             if (selectedFragment != null) {
@@ -62,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             // Set the default fragment
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.flFragment, hotDeals)
+                    .add(R.id.flFragment, hot)
                     .commit();
         }
 

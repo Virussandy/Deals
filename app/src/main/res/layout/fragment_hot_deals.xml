@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".Fragments.HotDeals">
+    tools:context=".fragments.HotDeals">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -55,13 +55,18 @@
 <!--            android:layout_gravity="fill" />-->
 <!--    </GridLayout>-->
 
-    <ProgressBar
+<!--    <ProgressBar-->
+<!--        android:id="@+id/progressbar"-->
+<!--        android:layout_width="30dp"-->
+<!--        android:layout_height="30dp"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:background="#00424242"-->
+<!--        android:backgroundTint="#00424242"-->
+<!--        android:visibility="gone" />-->
+
+    <include
         android:id="@+id/progressbar"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_gravity="center"
-        android:background="#00424242"
-        android:backgroundTint="#00424242"
-        android:visibility="gone" />
+        layout="@layout/loading"
+        android:visibility="gone"/>
 
 </LinearLayout>

@@ -1,6 +1,8 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.Material3.DynamicColors.Light">
+    <style name="AppTheme" parent="Theme.Material3.DynamicColors.Light.NoActionBar">
+        <item name="actionBarSize">@dimen/custom_action_bar_size</item>
+        <item name="android:fontFamily">@font/roboto_black</item>
     </style>
 
 </resources>

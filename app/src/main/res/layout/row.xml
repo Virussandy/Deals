@@ -5,18 +5,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/main_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="?attr/colorSurface"
         app:cardCornerRadius="8dp"
         app:cardElevation="4dp"
-        app:cardUseCompatPadding="true"
         app:contentPadding="4dp"
         style="@style/Widget.MaterialComponents.CardView">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/Linear"
             android:orientation="vertical">
 
             <com.google.android.material.imageview.ShapeableImageView
@@ -24,29 +23,27 @@
                 android:layout_gravity="center"
                 android:layout_width="match_parent"
                 android:cropToPadding="true"
-                android:layout_height="250dp" />
+                android:layout_height="200dp" />
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/name"
-                android:layout_marginTop="5dp"
                 android:layout_gravity="center"
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:gravity="center"
+                android:textStyle="bold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
                 android:gravity="center"
-                android:orientation="horizontal">
+                android:orientation="vertical">
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/costPrice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
                     android:gravity="center"
                     android:layout_gravity="center" />
                 <Space
@@ -56,7 +53,6 @@
                     android:id="@+id/sellPrice"
                     android:textStyle="bold"
                     android:textColor="#388E3C"
-                    android:layout_marginTop="5dp"
                     android:layout_width="wrap_content"
                     android:layout_gravity="center"
                     android:gravity="center"
@@ -67,7 +63,6 @@
                 android:id="@+id/updateTime"
                 android:layout_width="match_parent"
                 android:gravity="center"
-                android:layout_marginTop="5dp"
                 android:layout_height="wrap_content"/>
 
             <LinearLayout
@@ -75,10 +70,8 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
                 <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/shopImage1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
                     android:layout_gravity="center"
                     android:visibility="gone"
                     app:layout_constraintHorizontal_weight="1"
@@ -89,7 +82,6 @@
                     android:id="@+id/shopImage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
                     android:layout_gravity="center"
                     android:textStyle="bold"
                     app:layout_constraintHorizontal_weight="1"
@@ -102,11 +94,8 @@
                     android:layout_height="wrap_content"
                     android:text="@string/shop_now"
                     android:layout_gravity="center"
-                    style="@style/Widget.AppCompat.Button.Colored"
-                    app:layout_constraintHorizontal_weight="1"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/shopImage"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    />
             </LinearLayout>
 
         </LinearLayout>
@@ -115,7 +104,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardView"
+                android:id="@+id/off_card"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="8dp"
@@ -139,7 +128,7 @@
                 android:layout_weight="1"/>
 
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/share"
+                android:id="@+id/share_card"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="8dp"
@@ -148,9 +137,9 @@
                 android:theme="@style/AppTheme">
 
                 <ImageView
+                    android:id="@+id/share_image"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/send"
                     android:contentDescription="@string/share_image" />
 
             </com.google.android.material.card.MaterialCardView>

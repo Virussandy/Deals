@@ -64,11 +64,19 @@ public class CheckUpdate {
                 .setMessage("A new version of the app is available. Please update to continue.")
                 .setPositiveButton("Update", (dialog, which) -> {
                     String packageName = context.getPackageName();
-                    Uri playStoreUri = Uri.parse("market://details?id=" + packageName);
-                    Intent intent = new Intent(Intent.ACTION_VIEW, playStoreUri);
-                    context.startActivity(intent);
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("market://details?id=" + packageName));
+
+                    // Check if there's an app that can handle this intent
+                    if (intent.resolveActivity(context.getPackageManager()) != null) {
+                        context.startActivity(intent);
+                    } else {
+                        // Fallback to a web URL
+                        intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
+                        context.startActivity(intent);
+                    }
                 })
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss()).setCancelable(false); // Prevent the user from dismissing the dialog without updating
+                .setNegativeButton("Cancel", (dialog, which) ->     dialog.dismiss()).setCancelable(false); // Prevent the user from dismissing the dialog without updating
 
         AlertDialog dialog = builder.create();
         dialog.show();

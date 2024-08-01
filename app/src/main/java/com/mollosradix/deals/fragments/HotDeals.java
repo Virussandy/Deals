@@ -1,4 +1,4 @@
-package com.mollosradix.deals.Fragments;
+package com.mollosradix.deals.fragments;
 
 import static android.content.ContentValues.TAG;
 
@@ -9,12 +9,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
@@ -44,7 +46,7 @@ import java.util.concurrent.Executors;
 
 public class HotDeals extends BaseFragment {
 
-    private ProgressBar progressBar;
+    private RelativeLayout progressBar;
     private DealsAdapter adapter;
     private final List<DealsModel> hotDealData = new ArrayList<>();
     private int currentPage = 1;
@@ -98,13 +100,6 @@ public class HotDeals extends BaseFragment {
         return view;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-            currentPage = 1;
-            hotDealData.clear();
-            checkAndLoadData();
-    }
 
     private void fetchFirebaseConfig() {
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
