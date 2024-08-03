@@ -27,6 +27,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.mollosradix.deals.BaseFragment;
 import com.mollosradix.deals.DealsAdapter;
 import com.mollosradix.deals.DealsModel;
+import com.mollosradix.deals.GridSpacingItemDecoration;
 import com.mollosradix.deals.R;
 
 import org.jsoup.Jsoup;
@@ -80,6 +81,9 @@ public class HotDeals extends BaseFragment {
         progressBar = view.findViewById(R.id.progressbar);
         RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.grid_spacing);
+        boolean includeEdge = true;
+        recyclerView.addItemDecoration(new GridSpacingItemDecoration(2, spacingInPixels, includeEdge));
         adapter = new DealsAdapter(hotDealData, getActivity());
         recyclerView.setAdapter(adapter);
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -303,3 +307,4 @@ public class HotDeals extends BaseFragment {
         return originalUrl;
     }
 }
+

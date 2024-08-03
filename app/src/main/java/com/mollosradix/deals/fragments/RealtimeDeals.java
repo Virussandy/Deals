@@ -16,6 +16,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.mollosradix.deals.BaseFragment;
 import com.mollosradix.deals.DealsAdapter;
 import com.mollosradix.deals.DealsModel;
+import com.mollosradix.deals.GridSpacingItemDecoration;
 import com.mollosradix.deals.R;
 import com.mollosradix.deals.URLFilter;
 import org.apache.commons.lang3.StringUtils;
@@ -76,6 +77,9 @@ public class RealtimeDeals extends BaseFragment {
         recyclerView = view.findViewById(R.id.recyclerView_realtimeDeal);
         progressBar = view.findViewById(R.id.progressbar);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.grid_spacing);
+        boolean includeEdge = true;
+        recyclerView.addItemDecoration(new GridSpacingItemDecoration(2, spacingInPixels, includeEdge));
         checkAndLoadData();
         return view;
     }

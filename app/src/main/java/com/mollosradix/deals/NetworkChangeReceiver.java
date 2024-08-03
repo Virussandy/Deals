@@ -22,16 +22,10 @@ public class NetworkChangeReceiver extends BroadcastReceiver {
 
         boolean isConnected = false;
         if (cm != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Network network = cm.getActiveNetwork();
-                if (network != null) {
-                    NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
-                    isConnected = capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                }
-            } else {
-                // Handle older versions (API 20 and below)
-                android.net.NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-                isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+            Network network = cm.getActiveNetwork();
+            if (network != null) {
+                NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
+                isConnected = capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
             }
         }
 

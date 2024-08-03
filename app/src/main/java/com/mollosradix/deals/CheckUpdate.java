@@ -4,10 +4,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -34,7 +39,7 @@ public class CheckUpdate {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 String latestVersion = dataSnapshot.getValue(String.class);
-                checkForUpdate(latestVersion);
+                checkForUpdate(latestVersion,context);
             }
 
             @Override
@@ -44,41 +49,48 @@ public class CheckUpdate {
         });
     }
 
-    private void checkForUpdate(String latestVersion) {
+    private void checkForUpdate(String latestVersion,Context context) {
         String currentVersion = BuildConfig.VERSION_NAME; // Ensure this is correctly referenced
 
         Log.d(TAG, "Current Version: " + currentVersion);
         Log.d(TAG, "Latest Version: " + latestVersion);
 
         if (!currentVersion.equals(latestVersion)) {
-            showUpdateDialog();
+            showUpdateDialog(context);
             Log.d(TAG, "checkForUpdate: Not Equal");
         } else {
             Log.d(TAG, "checkForUpdate: Equal ");
         }
     }
 
-    private void showUpdateDialog() {
+    public void showUpdateDialog(Context context) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Update Available")
-                .setMessage("A new version of the app is available. Please update to continue.")
-                .setPositiveButton("Update", (dialog, which) -> {
-                    String packageName = context.getPackageName();
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("market://details?id=" + packageName));
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.dialog_update, null);
+        builder.setView(dialogView);
+        MaterialButton buttonUpdate = dialogView.findViewById(R.id.buttonUpdate);
+        MaterialButton buttonCancel = dialogView.findViewById(R.id.buttonCancel);
 
-                    // Check if there's an app that can handle this intent
-                    if (intent.resolveActivity(context.getPackageManager()) != null) {
-                        context.startActivity(intent);
-                    } else {
-                        // Fallback to a web URL
-                        intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
-                        context.startActivity(intent);
-                    }
-                })
-                .setNegativeButton("Cancel", (dialog, which) ->     dialog.dismiss()).setCancelable(false); // Prevent the user from dismissing the dialog without updating
-
+        builder.setCancelable(false);
         AlertDialog dialog = builder.create();
+
+        buttonUpdate.setOnClickListener(v -> {
+            String packageName = context.getPackageName();
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("market://details?id=" + packageName));
+
+            // Check if there's an app that can handle this intent
+            if (intent.resolveActivity(context.getPackageManager()) != null) {
+                context.startActivity(intent);
+            } else {
+                // Fallback to a web URL
+                intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
+                context.startActivity(intent);
+            }
+        });
+
+        buttonCancel.setOnClickListener(v -> dialog.dismiss());
+
         dialog.show();
     }
 }

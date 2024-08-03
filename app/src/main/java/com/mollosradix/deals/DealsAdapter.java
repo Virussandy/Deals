@@ -185,21 +185,21 @@ public class DealsAdapter extends RecyclerView.Adapter<DealsAdapter.HourDealsHol
         }
     }
 
-    private void setTextColorBasedOnBackground(TextView textView, int backgroundColor) {
-        boolean isDark = ColorUtils.calculateLuminance(backgroundColor) < 0.5; // Adjusted luminance threshold
-        int textColor = isDark ? Color.WHITE : Color.BLACK;
-        textView.setTextColor(textColor);
-    }
-
-    private void setTextColorBasedOnBackground(Button button, int backgroundColor) {
-        boolean isDark = ColorUtils.calculateLuminance(backgroundColor) < 0.5; // Adjusted luminance threshold
-        int textColor = isDark ? Color.WHITE : Color.BLACK;
-        button.setTextColor(textColor);
-    }
-
-    private void setTextColorBasedOnBackground(ImageView imageView, int backgroundColor) {
-        boolean isDark = ColorUtils.calculateLuminance(backgroundColor) < 0.5; // Adjusted luminance threshold
-        int iconColor = isDark ? Color.WHITE : Color.BLACK;
-        imageView.setColorFilter(iconColor);
-    }
+//    private void setTextColorBasedOnBackground(TextView textView, int backgroundColor) {
+//        boolean isDark = ColorUtils.calculateLuminance(backgroundColor) < 0.5; // Adjusted luminance threshold
+//        int textColor = isDark ? Color.WHITE : Color.BLACK;
+//        textView.setTextColor(textColor);
+//    }
+//
+//    private void setTextColorBasedOnBackground(Button button, int backgroundColor) {
+//        boolean isDark = ColorUtils.calculateLuminance(backgroundColor) < 0.5; // Adjusted luminance threshold
+//        int textColor = isDark ? Color.WHITE : Color.BLACK;
+//        button.setTextColor(textColor);
+//    }
+//
+//    private void setTextColorBasedOnBackground(ImageView imageView, int backgroundColor) {
+//        boolean isDark = ColorUtils.calculateLuminance(backgroundColor) < 0.5; // Adjusted luminance threshold
+//        int iconColor = isDark ? Color.WHITE : Color.BLACK;
+//        imageView.setColorFilter(iconColor);
+//    }
 }

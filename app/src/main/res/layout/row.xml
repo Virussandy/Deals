@@ -12,7 +12,7 @@
         app:cardCornerRadius="8dp"
         app:cardElevation="4dp"
         app:contentPadding="4dp"
-        style="@style/Widget.MaterialComponents.CardView">
+        style="@style/Widget.Material3.CardView.Outlined">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -25,13 +25,14 @@
                 android:cropToPadding="true"
                 android:layout_height="200dp" />
 
+
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/name"
                 android:layout_gravity="center"
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:gravity="center"
-                android:textStyle="bold"
+                android:fontFamily="@font/roboto_bold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
@@ -39,7 +40,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:orientation="vertical">
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/costPrice"
                     android:layout_width="wrap_content"
@@ -54,6 +56,7 @@
                     android:textStyle="bold"
                     android:textColor="#388E3C"
                     android:layout_width="wrap_content"
+                    android:fontFamily="@font/roboto_bold"
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:layout_height="wrap_content" />
@@ -62,41 +65,23 @@
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/updateTime"
                 android:layout_width="match_parent"
+                android:layout_marginTop="5dp"
                 android:gravity="center"
                 android:layout_height="wrap_content"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:visibility="gone"
-                    app:layout_constraintHorizontal_weight="1"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/button"
-                    app:layout_constraintTop_toTopOf="parent" />
                 <TextView
                     android:id="@+id/shopImage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:textStyle="bold"
-                    app:layout_constraintHorizontal_weight="1"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/button"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:layout_gravity="center" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/shop_now"
+                    android:fontFamily="@font/roboto_bold"
                     android:layout_gravity="center"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     />
-            </LinearLayout>
 
         </LinearLayout>
         <LinearLayout
@@ -116,7 +101,6 @@
                     android:id="@+id/off"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textStyle="bold"
                     android:paddingStart="2dp"
                     android:paddingEnd="2dp" />
 
